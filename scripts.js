@@ -1,22 +1,20 @@
-// farming
-// answer questions to get coins
-// use coins to buy seeds
-// plant stuff
-// let it grow let it grow idk the rest of the lyrics
-// sell fruits and veggies
-// shop has buy and sell option
-// buy more land plots to plant more stuff
-// upgrade your farm
+// core gameplay loop
+// answer questions to grow your plants
+// harvest and sell flowers, fruits and veggies to get coins
+// shop has buy and sell options
+// buy seeds and more garden plots to plant more stuff
 
 // character movement
 let idle = true;
-let direction = 0;
+let playerX = 0;
+let playerY = 0;
+let playerDirection = 180;
 
 // i need arrays to loop through character movement frames for each direction
-// then, when a specific key is pressed, it will set the direction variable to that orientation
-// then a function will activate, moving the character forward in the specified direction until the key is released
-// thus leaving the character in the idle version of the direction
-// will add diagonal movement later
+// then, when a specific key(s) are pressed, it will set the direction variable to that orientation
+// then a function will activate, moving the character forward in the specified direction
+// when the key(s) are released, the character will remain in the idle version of that direction
+// since our sprite only has right-facing frames for movement, we will have to flip the image when moving left using css.
 
 const upAnimationFrames = [
     //images???
@@ -34,7 +32,7 @@ const rightAnimationFrames = [
 
 ];
 
-// event listeners
+// event listeners (arrow keys and wasd)
 
 window.addEventListener('keydown', (event) => {
     if (event.code === 'Down') {
@@ -44,12 +42,7 @@ window.addEventListener('keydown', (event) => {
     } else {
             console.log('down key was pressed once');
             // Put initial press logic here
-            let frame = `idle${direction}.png`;
+            let frame = `idle${playerDirection}.png`;
         }
     }
 });
-
-
-const questionsArray = [
-
-];
