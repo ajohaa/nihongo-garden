@@ -1,0 +1,19 @@
+body {
+  background-image: url("Grass.png");
+  background-position: center center;
+  background-size: cover;
+  background-attachment: fixed;
+  margin: 0;
+  padding: 0;
+}
+
+.character img{
+  width: 50px;
+  height: auto;
+}
+
+#player {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
