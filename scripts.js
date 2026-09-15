@@ -207,6 +207,7 @@ const kanaBank = [
 ];
 
 let playerLevel = 1;
+const maxPlayerLevel = 25;
 let currentEXP = 0;
 let expNeededForLevelUp = 100;
 let totalCorrectAnswers = 0;
@@ -335,13 +336,52 @@ function gainEXP(amount) {
   currentEXP += amount;
   
   while (currentEXP >= expNeededForLevelUp) {
+    if (playerLevel >= maxPlayerLevel) {
+      currentEXP = 0;
+      break;
+    }
     currentEXP -= expNeededForLevelUp;
     playerLevel++;
     expNeededForLevelUp += 20; 
-    alert(`🎉 LEVEL UP! You reached Level ${playerLevel}!`);
+    showLevelUpPopup();
   }
   updateHUD();
 }
+
+function showLevelUpPopup() {
+  const levelUpOverlay = document.getElementById("level-up-overlay");
+  const levelUpMessage = document.getElementById("level-up-message");
+  const unlockedCropsContainer = document.getElementById("unlocked-crops-container");
+
+  levelUpMessage.textContent = `You reached Level ${playerLevel}!`;
+  unlockedCropsContainer.innerHTML = "";
+
+  const unlockedCrops = Object.values(seedCatalog)
+    .filter(crop => crop.unlockLevel === playerLevel)
+    .sort((firstCrop, secondCrop) => firstCrop.name.localeCompare(secondCrop.name));
+
+  if (unlockedCrops.length === 0) {
+    unlockedCropsContainer.textContent = "No new crops at this level.";
+  } else {
+    unlockedCrops.forEach(crop => {
+      const cropElement = document.createElement("div");
+      cropElement.className = "unlocked-crop";
+      cropElement.innerHTML = `
+        <img src="crops, seeds, signs, items/${crop.id}1.png" alt="${crop.name}">
+        <span>${crop.name}</span>
+      `;
+      unlockedCropsContainer.appendChild(cropElement);
+    });
+  }
+
+  levelUpOverlay.classList.remove("hidden");
+  isGamePaused = true;
+}
+
+document.getElementById("level-up-close-btn").addEventListener("click", () => {
+  document.getElementById("level-up-overlay").classList.add("hidden");
+  isGamePaused = false;
+});
 
 function generateRandomQuestion() {
   const targetIndex = Math.floor(Math.random() * kanaBank.length);
@@ -463,6 +503,13 @@ const dirtTileImages = [
   "dirt/dirt_08.png"
 ];
 const maxGardenPlots = 6;
+const plotUpgrades = [
+  { plotNumber: 2, unlockLevel: 5, price: 200 },
+  { plotNumber: 3, unlockLevel: 10, price: 400 },
+  { plotNumber: 4, unlockLevel: 15, price: 600 },
+  { plotNumber: 5, unlockLevel: 20, price: 800 },
+  { plotNumber: 6, unlockLevel: 25, price: 1000 }
+];
 const interactionDistance = 90;
 const plotsContainer = document.getElementById("plots-container");
 let nearbyInteraction = null;
@@ -660,11 +707,11 @@ function progressGardenGrowth() {
 // shop system
 
 const seedCatalog = {
-  asparagus: { id: "asparagus", name: "Asparagus", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  asparagus: { id: "asparagus", name: "Asparagus", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4, unlockLevel: null },
   beetroot: { id: "beetroot", name: "Beetroot", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
   blackberry: { id: "blackberry", name: "Blackberry", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
   broccoli: { id: "broccoli", name: "Broccoli", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  carrot: { id: "carrot", name: "Carrot", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  carrot: { id: "carrot", name: "Carrot", buyPrice: 8, sellPrice: 16, requiredQuestions: 4, maxStages: 4, unlockLevel: 4 },
   cauliflower: { id: "cauliflower", name: "Cauliflower", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
   celery: { id: "celery", name: "Celery", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
   chili: { id: "chili", name: "Chili", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
@@ -672,8 +719,8 @@ const seedCatalog = {
   garlic: { id: "garlic", name: "Garlic", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
   greenbeans: { id: "greenbeans", name: "Green Beans", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
   leek: { id: "leek", name: "Leek", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  lettuce: { id: "lettuce", name: "Lettuce", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  potato: { id: "potato", name: "Potato", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  lettuce: { id: "lettuce", name: "Lettuce", buyPrice: 9, sellPrice: 18, requiredQuestions: 4, maxStages: 4, unlockLevel: 5 },
+  potato: { id: "potato", name: "Potato", buyPrice: 6, sellPrice: 12, requiredQuestions: 4, maxStages: 4, unlockLevel: 2 },
   pumpkin: { id: "pumpkin", name: "Pumpkin", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
   raspberry: { id: "raspberry", name: "Raspberry", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
   redcabbage: { id: "redcabbage", name: "Red Cabbage", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
@@ -682,8 +729,8 @@ const seedCatalog = {
   strawberry: { id: "strawberry", name: "Strawberry", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
   sunflower: { id: "sunflower", name: "Sunflower", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
   tomato: { id: "tomato", name: "Tomato", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  turnip: { id: "turnip", name: "Turnip", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  wheat: { id: "wheat", name: "Wheat", buyPrice: 5, sellPrice: 10, requiredQuestions: 4, maxStages: 4 },
+  turnip: { id: "turnip", name: "Turnip", buyPrice: 7, sellPrice: 14, requiredQuestions: 4, maxStages: 4, unlockLevel: 3 },
+  wheat: { id: "wheat", name: "Wheat", buyPrice: 5, sellPrice: 10, requiredQuestions: 4, maxStages: 4, unlockLevel: 1 },
   zucchini: { id: "zucchini", name: "Zucchini", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 }
 };
 
@@ -826,8 +873,31 @@ function updateShopUI() {
 
   const searchTerm = shopSearchInput.value.trim().toLowerCase();
   const isBuyTab = currentShopTab === "buy";
+
+  const nextPlot = plotUpgrades[gardenPlots.length - 1];
+  if (isBuyTab && nextPlot && playerLevel >= nextPlot.unlockLevel
+    && (searchTerm === "" || `garden plot ${nextPlot.plotNumber}`.includes(searchTerm))) {
+    const plotCard = document.createElement("div");
+    plotCard.className = "shop-card shop-upgrade-card";
+    const canBuyPlot = playerWallet >= nextPlot.price;
+    plotCard.innerHTML = `
+      <h3>Garden Plot ${nextPlot.plotNumber}</h3>
+      <p>Price: ${nextPlot.price} 🪙</p>
+      <p>${canBuyPlot ? "Available" : "Not enough coins"}</p>
+      <button class="shop-action-btn">Buy Plot</button>
+    `;
+    const plotActionButton = plotCard.querySelector("button");
+    plotActionButton.disabled = !canBuyPlot;
+    plotActionButton.addEventListener("click", buyNextGardenPlot);
+    itemsContainer.appendChild(plotCard);
+  }
+
   const crops = Object.values(seedCatalog)
-    .filter(crop => crop.name.toLowerCase().includes(searchTerm))
+    .filter(crop => {
+      const hasPrice = isBuyTab ? Number.isFinite(crop.buyPrice) : Number.isFinite(crop.sellPrice);
+      const isUnlocked = Number.isFinite(crop.unlockLevel) && playerLevel >= crop.unlockLevel;
+      return hasPrice && isUnlocked && crop.name.toLowerCase().includes(searchTerm);
+    })
     .sort((firstCrop, secondCrop) => {
       const firstConfigured = isBuyTab
         ? Number.isFinite(firstCrop.buyPrice)
@@ -840,10 +910,11 @@ function updateShopUI() {
 
       return Number(secondConfigured) - Number(firstConfigured)
         || secondOwned - firstOwned
+        || firstCrop.unlockLevel - secondCrop.unlockLevel
         || firstCrop.name.localeCompare(secondCrop.name);
     });
 
-  if (crops.length === 0) {
+  if (crops.length === 0 && itemsContainer.children.length === 0) {
     itemsContainer.innerHTML = '<p class="shop-empty-message">No crops match your search.</p>';
     return;
   }
@@ -887,13 +958,25 @@ function updateShopUI() {
   });
 }
 
+function buyNextGardenPlot() {
+  const nextPlot = plotUpgrades[gardenPlots.length - 1];
+  if (!nextPlot || playerLevel < nextPlot.unlockLevel || playerWallet < nextPlot.price) return;
+
+  playerWallet -= nextPlot.price;
+  gardenPlots.push(createGardenPlot(nextPlot.plotNumber));
+  updateHUD();
+  renderGardenPlots();
+  updateShopUI();
+}
+
 function getHarvestedCropCount(crop) {
   const cropKey = `harvested${crop.id.charAt(0).toUpperCase() + crop.id.slice(1)}`;
   return playerInventory[cropKey] || 0;
 }
 
 function buySeedItem(crop) {
-  if (Number.isFinite(crop.buyPrice) && playerWallet >= crop.buyPrice && hasInventorySpace()) {
+  if (Number.isFinite(crop.buyPrice) && Number.isFinite(crop.unlockLevel)
+    && playerLevel >= crop.unlockLevel && playerWallet >= crop.buyPrice && hasInventorySpace()) {
     playerWallet -= crop.buyPrice;
     const seedKey = `${crop.id}Seeds`;
     playerInventory[seedKey] = (playerInventory[seedKey] || 0) + 1;
