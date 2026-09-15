@@ -7,22 +7,22 @@
   <title>NihongoGarden</title>
   <link rel="stylesheet" href="style.css">
   <script>
-    (function (d) {
-      var config = {
-        kitId: 'jjz7uub',
-        scriptTimeout: 3000,
-        async: true
-      },
-        h = d.documentElement, t = setTimeout(function () { h.className = h.className.replace(/\bwf-loading\b/g, "") + " wf-inactive"; }, config.scriptTimeout), tk = d.createElement("script"), f = false, s = d.getElementsByTagName("script")[0], a; h.className += " wf-loading"; tk.src = 'https://use.typekit.net/' + config.kitId + '.js'; tk.async = true; tk.onload = tk.onreadystatechange = function () { a = this.readyState; if (f || a && a != "complete" && a != "loaded") return; f = true; clearTimeout(t); try { Typekit.load(config) } catch (e) { } }; s.parentNode.insertBefore(tk, s)
-    })(document);
-  </script>
+  (function(d) {
+    var config = {
+      kitId: 'jjz7uub',
+      scriptTimeout: 3000,
+      async: true
+    },
+    h=d.documentElement,t=setTimeout(function(){h.className=h.className.replace(/\bwf-loading\b/g,"")+" wf-inactive";},config.scriptTimeout),tk=d.createElement("script"),f=false,s=d.getElementsByTagName("script")[0],a;h.className+=" wf-loading";tk.src='https://use.typekit.net/'+config.kitId+'.js';tk.async=true;tk.onload=tk.onreadystatechange=function(){a=this.readyState;if(f||a&&a!="complete"&&a!="loaded")return;f=true;clearTimeout(t);try{Typekit.load(config)}catch(e){}};s.parentNode.insertBefore(tk,s)
+  })(document);
+</script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 </head>
 
 <body>
   <div id="main-scene">
-    <div id="top-bar">
+    <div id="top-bar"> <!-- heads-up display -->
       <div class="hud-stat">🪙 <span id="hud-coins">10</span></div>
       <div class="hud-stat">⭐ LVL <span id="hud-level">0</span></div>
       <div class="hud-stat">⚡ EXP: <span id="hud-exp">0/100</span></div>
@@ -33,11 +33,13 @@
     <div class="character" id="player">
       <img src="idle180.png">
     </div>
-    <button id="inventory-btn" type="button">Inventory</button>
+    <div id="action-buttons" class="col-3 d-flex flex-column align-items-stretch gap-2">
+      <button id="shop-btn" type="button">🛒 Shop</button>
+      <button id="inventory-btn" type="button"> 🎒 Inventory</button>
+    </div>
     <div id="inventory-panel" class="hidden" aria-label="Inventory">
       <div id="inventory-slots"></div>
     </div>
-    <button id="shop-btn">🛒 Shop</button>
 
     <div id="shop-modal-overlay" class="hidden">
       <div id="shop-modal-box">
@@ -60,6 +62,7 @@
         </div>
       </div>
     </div>
+    <button id="kana-reference-btn" type="button">あ/ア</button>
     <button id="practice-btn">🌱 Practice</button>
 
     <div id="quiz-modal-overlay" class="hidden">
@@ -67,7 +70,7 @@
         <button id="close-modal-btn">&times;</button>
         <!-- NEW: Mode Selection Screen -->
         <div id="mode-selection-menu">
-          <h2>Select Your Practice Mode</h2>
+          <h2><b>Select a Practice Mode!</b></h2>
           <div class="menu-grid">
             <button class="mode-btn" data-mode="hiragana">🇯🇵 Hiragana</button>
             <button class="mode-btn" data-mode="katakana">🎏 Katakana</button>
@@ -96,6 +99,14 @@
         <h3>New crops unlocked!</h3>
         <div id="unlocked-crops-container"></div>
         <button id="level-up-close-btn" type="button">Continue</button>
+      </div>
+    </div>
+
+    <div id="kana-reference-overlay" class="hidden">
+      <div id="kana-reference-box">
+        <button id="close-kana-reference-btn" type="button">&times;</button>
+        <h2>Kana Reference</h2>
+        <div id="kana-reference-grid"></div>
       </div>
     </div>
   </div>

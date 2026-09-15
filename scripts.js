@@ -55,7 +55,17 @@ const playerAnimations = {
 };
 
 // Player physics & rendering state
-let player = { x: 100, y: 100, speed: 6 };
+const mainScene = document.getElementById("main-scene");
+const playerWidth = 50;
+const playerHeight = 50;
+const playerScale = 1.6;
+const playerVisualInsetX = (playerWidth * playerScale - playerWidth) / 2;
+const playerVisualInsetY = (playerHeight * playerScale - playerHeight) / 2;
+let player = {
+  x: (mainScene.clientWidth - playerWidth) / 2,
+  y: (mainScene.clientHeight - playerHeight) / 2,
+  speed: 6
+};
 let lastAngle = '180';
 let animationFrame = 0;
 let animationTimer = 0;
@@ -132,18 +142,20 @@ function updateMovement() {
             characterImg.src = player.currentSpriteImg;
         }
 
-      const wrapperWidth = 50;
-      const wrapperHeight = 50;
+      // Keep the scaled player fully inside the game scene.
+      const minimumPlayerX = playerVisualInsetX;
+      const maximumPlayerX = mainScene.clientWidth - playerWidth - playerVisualInsetX;
+      const minimumPlayerY = playerVisualInsetY;
+      const maximumPlayerY = mainScene.clientHeight - playerHeight - playerVisualInsetY;
 
-      // Screen boundaries
-      if (player.x < 0) player.x = 0;
-      if (player.x > window.innerWidth - wrapperWidth) {
-        player.x = window.innerWidth - wrapperWidth;
+      if (player.x < minimumPlayerX) player.x = minimumPlayerX;
+      if (player.x > maximumPlayerX) {
+        player.x = maximumPlayerX;
       }
 
-      if (player.y < 0) player.y = 0;
-      if (player.y > window.innerHeight - wrapperHeight) {
-        player.y = window.innerHeight - wrapperHeight;
+      if (player.y < minimumPlayerY) player.y = minimumPlayerY;
+      if (player.y > maximumPlayerY) {
+        player.y = maximumPlayerY;
       }
 
       // Position the wrapper and handle the horizontal left-flip transform
@@ -222,6 +234,10 @@ let timedSessionCorrectCount = 0;
 
 const openBtn = document.getElementById("practice-btn");
 const overlay = document.getElementById("quiz-modal-overlay");
+const kanaReferenceBtn = document.getElementById("kana-reference-btn");
+const kanaReferenceOverlay = document.getElementById("kana-reference-overlay");
+const closeKanaReferenceBtn = document.getElementById("close-kana-reference-btn");
+const kanaReferenceGrid = document.getElementById("kana-reference-grid");
 const closeBtn = document.getElementById("close-modal-btn");
 const menuScreen = document.getElementById("mode-selection-menu");
 const gameScreen = document.getElementById("question-gameplay-screen");
@@ -234,6 +250,8 @@ const modalTimerText = document.getElementById("modal-timer-countdown");
 
 openBtn.addEventListener("click", openQuizModal);
 closeBtn.addEventListener("click", closeQuizModal);
+kanaReferenceBtn.addEventListener("click", openKanaReference);
+closeKanaReferenceBtn.addEventListener("click", closeKanaReference);
 
 document.querySelectorAll(".mode-btn").forEach(btn => {
   btn.addEventListener("click", () => {
@@ -280,6 +298,53 @@ function closeQuizModal() {
   
   isGamePaused = false; 
   updateHUD();
+}
+
+function openKanaReference() {
+  if (!overlay.classList.contains("hidden")) return;
+
+  kanaReferenceGrid.innerHTML = "";
+  const kanaRows = [
+    ["a", "i", "u", "e", "o"],
+    ["ka", "ki", "ku", "ke", "ko"],
+    ["sa", "shi", "su", "se", "so"],
+    ["ta", "chi", "tsu", "te", "to"],
+    ["na", "ni", "nu", "ne", "no"],
+    ["ha", "hi", "fu", "he", "ho"],
+    ["ma", "mi", "mu", "me", "mo"],
+    ["ya", "yu", "yo"],
+    ["ra", "ri", "ru", "re", "ro"],
+    ["wa", "wo", "n"]
+  ];
+
+  kanaRows.forEach(rowRomaji => {
+    const row = document.createElement("div");
+    row.className = "kana-reference-row";
+
+    rowRomaji.forEach(romaji => {
+      const kana = kanaBank.find(entry => entry.romaji === romaji);
+      if (!kana) return;
+
+      const referenceItem = document.createElement("div");
+      referenceItem.className = "kana-reference-item";
+      referenceItem.innerHTML = `
+        <span class="kana-character">${kana.hiragana}</span>
+        <span class="kana-character">${kana.katakana}</span>
+        <span class="kana-romaji">${kana.romaji}</span>
+      `;
+      row.appendChild(referenceItem);
+    });
+
+    kanaReferenceGrid.appendChild(row);
+  });
+
+  kanaReferenceOverlay.classList.remove("hidden");
+  isGamePaused = true;
+}
+
+function closeKanaReference() {
+  kanaReferenceOverlay.classList.add("hidden");
+  isGamePaused = false;
 }
 
 // IN-MODAL TIMER ENGINE
@@ -943,7 +1008,7 @@ function updateShopUI() {
       const ownedCrops = getHarvestedCropCount(crop);
       const hasSellPrice = Number.isFinite(crop.sellPrice);
       card.innerHTML = `
-        <h3>Ripe ${crop.name.replace(" Seed", "")}</h3>
+        <h3>${crop.name.replace(" Seed", "")}</h3>
         <p>Value: ${hasSellPrice ? `${crop.sellPrice} 🪙` : "Unavailable"}</p>
         <p>In Bag: ${ownedCrops}</p>
         <button class="shop-action-btn" style="background-color: #4CAF50;">${hasSellPrice ? "Sell 1" : "Locked"}</button>
