@@ -533,6 +533,9 @@ function renderGardenPlots() {
   });
 
   plotsContainer.appendChild(plotRow);
+  requestAnimationFrame(() => {
+    if (typeof seedCatalog !== "undefined") updateInteractionPrompt();
+  });
 }
 
 function getPlotPlant(plotId, slotIndex) {
@@ -651,6 +654,7 @@ function progressGardenGrowth() {
     });
   });
   renderGardenPlots();
+  updateInteractionPrompt();
 }
 
 // shop system
