@@ -41,7 +41,7 @@ let player = { x: 100, y: 100, speed: 6 };
 let lastAngle = '180';
 let animationFrame = 0;
 let animationTimer = 0;
-const ANIMATION_SPEED = 5; // Higher = slower switching (e.g., switch frame every 10 ticks)
+const ANIMATION_SPEED = 4; // Higher = slower switching (e.g., switch frame every 10 ticks)
 
 function updateMovement() {
     if (isGamePaused) {
@@ -112,32 +112,24 @@ function updateMovement() {
 
         if (characterImg) {
             characterImg.src = player.currentSpriteImg;
-            const playerWrapper = document.getElementById("player");
-            if (playerWrapper) {
-                const characterImg = playerWrapper.querySelector("img");
-
-                if (characterImg) {
-                    characterImg.src = player.currentSpriteImg;
-                }
-
-                const wrapperWidth = 50;
-                const wrapperHeight = 50;
-
-                // Screen boundaries
-                if (player.x < 0) player.x = 0;
-                if (player.x > window.innerWidth - wrapperWidth) {
-                    player.x = window.innerWidth - wrapperWidth;
-                }
-
-                if (player.y < 0) player.y = 0;
-                if (player.y > window.innerHeight - wrapperHeight) {
-                    player.y = window.innerHeight - wrapperHeight;
-                }
-
-                // Position the wrapper and handle the horizontal left-flip transform
-                playerWrapper.style.transform = `translate(${player.x}px, ${player.y}px) scaleX(${shouldFlip ? -1 : 1})`;
-            }
         }
+
+      const wrapperWidth = 50;
+      const wrapperHeight = 50;
+
+      // Screen boundaries
+      if (player.x < 0) player.x = 0;
+      if (player.x > window.innerWidth - wrapperWidth) {
+        player.x = window.innerWidth - wrapperWidth;
+      }
+
+      if (player.y < 0) player.y = 0;
+      if (player.y > window.innerHeight - wrapperHeight) {
+        player.y = window.innerHeight - wrapperHeight;
+      }
+
+      // Position the wrapper and handle the horizontal left-flip transform
+      playerWrapper.style.transform = `translate(${player.x}px, ${player.y}px) scaleX(${shouldFlip ? -1 : 1})`;
     }
 
     requestAnimationFrame(updateMovement);
@@ -444,27 +436,7 @@ function updateHUD() {
   document.getElementById("hud-exp").textContent = `${currentEXP}/${expNeededForLevelUp}`;
 }
 
-function gainEXP(amount) {
-  currentEXP += amount;
-  while (currentEXP >= expNeededForLevelUp) {
-    currentEXP -= expNeededForLevelUp;
-    playerLevel++;
-    expNeededForLevelUp += 20; // Classic scaling difficulty modifier curves
-    alert(`🎉 LEVEL UP! You reached Level ${playerLevel}!`);
-  }
-  updateHUD();
-}
-
 // plants n' stuff
-
-let playerStats = {
-  coins: 10, // Start out with enough to buy a couple of basic seeds
-  inventory: {
-    carrotSeeds: 2,
-    tomatoSeeds: 0,
-    cornSeeds: 0
-  }
-};
 
 // Represents the interactive soil plots on screen
 let gardenPlots = [
@@ -500,6 +472,7 @@ function progressGardenGrowth() {
 
 const seedCatalog = {
   carrot: {
+    id: "carrot",
     name: "Carrot",
     buyPrice: 5,
     requiredQuestions: 3, // quick, early game starter
@@ -507,6 +480,7 @@ const seedCatalog = {
     maxStages: 3          // e.g., seed, sprout, ready
   },
   tomato: {
+    id: "tomato",
     name: "Tomato",
     buyPrice: 15,
     requiredQuestions: 5, // Mid-tier
@@ -514,6 +488,7 @@ const seedCatalog = {
     maxStages: 4          // e.g., seed, sprout, stalk, ripe
   },
   corn: {
+    id: "corn",
     name: "Corn",
     buyPrice: 30,
     requiredQuestions: 10, // Premium crop!
@@ -607,7 +582,6 @@ function updateShopUI() {
   });
 }
 
-// 5. Transaction Handlers
 function buySeedItem(crop) {
   if (playerWallet >= crop.buyPrice) {
     playerWallet -= crop.buyPrice;
