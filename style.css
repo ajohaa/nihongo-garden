@@ -7,13 +7,21 @@ body {
   padding: 0;
 }
 
-.character img{
-  width: 50px;
-  height: auto;
-}
-
 #player {
   position: absolute;
   top: 0;
   left: 0;
+  
+  /* Use Flexbox to anchor the feet to the bottom */
+  display: flex;
+  align-items: flex-end;    /* Pushes the character's feet to the ground baseline */
+  justify-content: center;
+  width: 50px;   
+  height: 50px;  
+}
+
+#player img {
+  width: auto;  
+  height: auto;
+  display: block;
 }

@@ -16,23 +16,10 @@ const movement = {
 
 // Map physical keys to our movement directions
 const keyMap = {
-    // Arrow keys
-    'ArrowUp': 'up',
-    'ArrowDown': 'down',
-    'ArrowLeft': 'left',
-    'ArrowRight': 'right',
-
-    // WASD keys (lowercase)
-    'w': 'up',
-    's': 'down',
-    'a': 'left',
-    'd': 'right',
-
-    // WASD keys (uppercase/Caps Lock safety)
-    'W': 'up',
-    'S': 'down',
-    'A': 'left',
-    'D': 'right'
+    'ArrowUp': 'up', 'w': 'up', 'W': 'up',
+    'ArrowDown': 'down', 's': 'down', 'S': 'down',
+    'ArrowLeft': 'left', 'a': 'left', 'A': 'left',
+    'ArrowRight': 'right', 'd': 'right', 'D': 'right'
 };
 
 window.addEventListener("keydown", (event) => {
@@ -48,19 +35,19 @@ window.addEventListener("keyup", (event) => {
 });
 
 const playerAnimations = {
-    '0': ['walk0.1.png', 'walk0.2.png', 'walk0.3.png', 'walk0.4.png', 'walk0.5.png'],// up
-    '180': ['walk180.1.png', 'walk180.2.png', 'walk180.3.png', 'walk180.4.png', 'walk180.5.png'],// down
+    '0': ['walk0.1.png', 'walk0.2.png', 'walk0.3.png', 'walk0.4.png', 'walk0.5.png'], // up
+    '180': ['walk180.1.png', 'walk180.2.png', 'walk180.3.png', 'walk180.4.png', 'walk180.5.png'], // down
     '90': ['walk90.1.png', 'walk90.2.png', 'walk90.3.png', 'walk90.4.png', 'walk90.5.png'], // right
-    '45': ['walk45.1.png', 'walk45.2.png', 'walk45.3.png', 'walk45.4.png', 'walk45.5.png'],// up-right
+    '45': ['walk45.1.png', 'walk45.2.png', 'walk45.3.png', 'walk45.4.png', 'walk45.5.png'], // up-right
     '135': ['walk135.1.png', 'walk135.2.png', 'walk135.3.png', 'walk135.4.png', 'walk135.5.png'], // down-right
 };
 
 // Player physics & rendering state
-let player = { x: 100, y: 100, speed: 5 };
+let player = { x: 100, y: 100, speed: 6 };
 let lastAngle = '180';
 let animationFrame = 0;
 let animationTimer = 0;
-const ANIMATION_SPEED = 10; // Switch frames every 10 loops// Higher = slower switching (e.g., switch frame every 10 ticks)
+const ANIMATION_SPEED = 5; // Higher = slower switching (e.g., switch frame every 10 ticks)
 
 function updateMovement() {
     let dx = 0;
@@ -106,7 +93,7 @@ function updateMovement() {
         }
 
         // Set sprite name string
-        player.currentSpriteName = playerAnimations[lookupAngle][animationFrame];
+        player.currentSpriteImg = playerAnimations[lookupAngle][animationFrame];
 
     } else {
         animationFrame = 0;
@@ -118,16 +105,44 @@ function updateMovement() {
         else if (lastAngle === '270') { lookupAngle = '90'; shouldFlip = true; }
         else { lookupAngle = lastAngle; shouldFlip = false; }
 
-        player.currentSpriteName = `idle${lookupAngle}.png`;
+        player.currentSpriteImg = `idle${lookupAngle}.png`;
     }
 
-  const characterElement = document.getElementById("player");
-  if (characterElement) {
-    // Update the image source path
-    characterElement.src = `images/${currentSpriteImg}`;
-    characterElement.style.transform = `translate(${player.x}px, ${player.y}px) scaleX(${shouldFlip ? -1 : 1})`;
-  }
-  requestAnimationFrame(updateMovement);
+    const playerWrapper = document.getElementById("player");
+    if (playerWrapper) {
+        const characterImg = playerWrapper.querySelector("img");
+
+        if (characterImg) {
+            characterImg.src = player.currentSpriteImg;
+            const playerWrapper = document.getElementById("player");
+            if (playerWrapper) {
+                const characterImg = playerWrapper.querySelector("img");
+
+                if (characterImg) {
+                    characterImg.src = player.currentSpriteImg;
+                }
+
+                const wrapperWidth = 50;
+                const wrapperHeight = 50;
+
+                // Screen boundaries
+                if (player.x < 0) player.x = 0;
+                if (player.x > window.innerWidth - wrapperWidth) {
+                    player.x = window.innerWidth - wrapperWidth;
+                }
+
+                if (player.y < 0) player.y = 0;
+                if (player.y > window.innerHeight - wrapperHeight) {
+                    player.y = window.innerHeight - wrapperHeight;
+                }
+
+                // Position the wrapper and handle the horizontal left-flip transform
+                playerWrapper.style.transform = `translate(${player.x}px, ${player.y}px) scaleX(${shouldFlip ? -1 : 1})`;
+            }
+        }
+    }
+
+    requestAnimationFrame(updateMovement);
 }
 
 requestAnimationFrame(updateMovement);
