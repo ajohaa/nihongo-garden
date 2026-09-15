@@ -1,11 +1,5 @@
-// core gameplay loop
-// answer questions to grow your plants
-// harvest and sell flowers, fruits and veggies to get coins
-// shop has buy and sell options
-// buy seeds and more garden plots to plant more stuff
-
-
 // character movement
+
 // state tracker for 4 primary movement keys (arrow keys and WASD)
 const movement = {
     up: false,
@@ -201,11 +195,18 @@ const kanaBank = [
     { romaji: "n", hiragana: "ん", katakana: "ン" }
 ];
 
-// 2. RUNTIME GAME VARIABLES
-let totalCorrectAnswers = 0; 
-let currentQuestion = null;  
+let playerLevel = 0;
+let currentEXP = 0;
+let expNeededForLevelUp = 100;
+let totalCorrectAnswers = 0;
+
+let currentQuestion = null;   
 let currentMode = "free";    
-let isGamePaused = false;  
+let isGamePaused = false;    
+
+let timedCountdownInterval = null;
+let secondsRemaining = 60;
+let timedSessionCorrectCount = 0;
 
 const openBtn = document.getElementById("practice-btn");
 const overlay = document.getElementById("quiz-modal-overlay");
@@ -215,6 +216,9 @@ const gameScreen = document.getElementById("question-gameplay-screen");
 const questionText = document.getElementById("question-text");
 const choicesContainer = document.getElementById("choices-container");
 const feedbackText = document.getElementById("feedback-text");
+
+const modalTimerBlock = document.getElementById("modal-timer");
+const modalTimerText = document.getElementById("modal-timer-countdown");
 
 openBtn.addEventListener("click", openQuizModal);
 closeBtn.addEventListener("click", closeQuizModal);
@@ -226,7 +230,12 @@ document.querySelectorAll(".mode-btn").forEach(btn => {
     menuScreen.classList.add("hidden");
     gameScreen.classList.remove("hidden");
     
-    nextQuestionSession();
+    // Start specialized clock if Timed Mode is chosen
+    if (currentMode === "timed") {
+      startTimedPracticeSession();
+    } else {
+      nextQuestionSession();
+    }
   });
 });
 
@@ -238,9 +247,93 @@ function openQuizModal() {
 }
 
 function closeQuizModal() {
+  // If player clicks close button while timed mode interval is actively processing...
+  if (currentMode === "timed" && timedCountdownInterval !== null && secondsRemaining > 0) {
+    const confirmExit = confirm("⚠️ Are you sure you want to exit early? You will forfeit all progress and gain 0 EXP for this session!");
+    
+    if (!confirmExit) {
+      return; // Break execution cycle out, returning them safely back into the active quiz game
+    }
+  }
+
+  // Clear running timers if player leaves early
+  if (timedCountdownInterval) {
+    clearInterval(timedCountdownInterval);
+    timedCountdownInterval = null;
+  }
+
   overlay.classList.add("hidden");
   feedbackText.classList.add("hidden");
-  isGamePaused = false; // Restores responsive standard walk capabilities
+  modalTimerBlock.classList.add("hidden"); // Securely clear internal layout elements
+  
+  isGamePaused = false; 
+  updateHUD();
+}
+
+// IN-MODAL TIMER ENGINE
+function startTimedPracticeSession() {
+  secondsRemaining = 60;
+  timedSessionCorrectCount = 0;
+  modalTimerText.textContent = secondsRemaining;
+  modalTimerBlock.classList.remove("hidden"); // Render clock panel above question blocks
+  
+  nextQuestionSession();
+  
+  timedCountdownInterval = setInterval(() => {
+    secondsRemaining--;
+    modalTimerText.textContent = secondsRemaining;
+    
+    if (secondsRemaining <= 0) {
+      endTimedPracticeSession();
+    }
+  }, 1000);
+}
+
+function endTimedPracticeSession() {
+  clearInterval(timedCountdownInterval);
+  timedCountdownInterval = null;
+  modalTimerBlock.classList.add("hidden"); 
+
+  const expGained = timedSessionCorrectCount * 2; 
+  
+  // 1. Show the summary results panel cleanly
+  questionText.textContent = "⏱️ Time's Up!";
+  feedbackText.classList.remove("hidden");
+  feedbackText.className = "correct-msg";
+  feedbackText.innerHTML = `Great job! You answered <strong>${timedSessionCorrectCount}</strong> questions correctly.<br>🎉 Gained <strong>+${expGained} EXP</strong>!`;
+  
+  // 2. Clear out old answer choice buttons
+  choicesContainer.innerHTML = "";
+  
+  gainEXP(expGained);
+
+  // 3. Generate the action button
+  const menuReturnBtn = document.createElement("button");
+  menuReturnBtn.className = "choice-btn";
+  menuReturnBtn.textContent = "Return to Menu";
+  menuReturnBtn.style.marginTop = "25px";
+  
+  menuReturnBtn.addEventListener("click", () => {
+    feedbackText.classList.add("hidden"); 
+    feedbackText.innerHTML = ""; // Completely wipe the text out of memory
+    
+    menuScreen.classList.remove("hidden");
+    gameScreen.classList.add("hidden");
+  });
+  
+  choicesContainer.appendChild(menuReturnBtn);
+}
+
+function gainEXP(amount) {
+  currentEXP += amount;
+  
+  while (currentEXP >= expNeededForLevelUp) {
+    currentEXP -= expNeededForLevelUp;
+    playerLevel++;
+    expNeededForLevelUp += 20; 
+    alert(`🎉 LEVEL UP! You reached Level ${playerLevel}!`);
+  }
+  updateHUD();
 }
 
 function generateRandomQuestion() {
@@ -253,8 +346,7 @@ function generateRandomQuestion() {
 
   let isHiragana = true;
   if (currentMode === "katakana") isHiragana = false;
-  if (currentMode === "free") isHiragana = Math.random() < 0.5; // Toggle balanced coin flip
-  
+  if (currentMode === "free" || currentMode === "timed") isHiragana = Math.random() < 0.5;  
   const scriptName = isHiragana ? "Hiragana" : "Katakana";
   const kanaChar = isHiragana ? target.hiragana : target.katakana;
 
@@ -282,13 +374,9 @@ function generateRandomQuestion() {
   // Shuffle selections array down to exactly 3 wrong items + 1 right choice
   wrongChoicesPool.sort(() => 0.5 - Math.random());
   const finalChoices = [correctAnswerText, wrongChoicesPool[0], wrongChoicesPool[1], wrongChoicesPool[2]];
-  finalChoices.sort(() => 0.5 - Math.random()); // Scramble presentation order layouts
+  finalChoices.sort(() => 0.5 - Math.random()); 
 
-  return {
-    prompt: questionText,
-    choices: finalChoices,
-    correct: correctAnswerText
-  };
+  return { prompt: questionText, choices: finalChoices, correct: correctAnswerText };
 }
 
 function nextQuestionSession() {
@@ -315,8 +403,11 @@ function checkKanaAnswer(selectedButton, chosenText) {
   choiceButtons.forEach(btn => btn.disabled = true);
 
   if (chosenText === currentQuestion.correct) {
-    totalCorrectAnswers++; 
-    feedbackText.textContent = "✨ Great job! Your garden is thriving.";
+    if (currentMode === "timed") {
+      timedSessionCorrectCount++; 
+    } else {
+    totalCorrectAnswers++; }
+    feedbackText.textContent = "✨ Great job! Your answer is correct.";
     feedbackText.className = "correct-msg";
     selectedButton.style.borderColor = "#2e7d32";
     selectedButton.style.backgroundColor = "#e8f5e9";
@@ -327,15 +418,41 @@ function checkKanaAnswer(selectedButton, chosenText) {
     selectedButton.style.backgroundColor = "#ffebee";
   }
 
-  const nextBtn = document.createElement("button");
-  nextBtn.id = "modal-next-action-btn";
-  nextBtn.textContent = "Next Question 👉";
-  nextBtn.style.marginTop = "20px";
-  nextBtn.style.padding = "10px 20px";
-  nextBtn.className = "choice-btn"; 
-  
-  nextBtn.addEventListener("click", nextQuestionSession);
-  choicesContainer.appendChild(nextBtn);
+  // If in timed mode, skip the manual "Next Question" click
+  // It waits exactly 0.6 seconds so they see the feedback color, then auto-loads the next question
+  if (currentMode === "timed") {
+    setTimeout(() => {
+      if (secondsRemaining > 0) nextQuestionSession();
+    }, 600);
+  } else {
+    // Normal practice modes get the manual click button path
+    const nextBtn = document.createElement("button");
+    nextBtn.id = "modal-next-action-btn";
+    nextBtn.textContent = "Next Question 👉";
+    nextBtn.style.marginTop = "20px";
+    nextBtn.style.padding = "10px 20px";
+    nextBtn.className = "choice-btn"; 
+    nextBtn.addEventListener("click", nextQuestionSession);
+    choicesContainer.appendChild(nextBtn);
+  }
+}
+
+// REFRESH STAT DATA COUNTERS
+function updateHUD() {
+  document.getElementById("hud-coins").textContent = playerWallet;
+  document.getElementById("hud-level").textContent = playerLevel;
+  document.getElementById("hud-exp").textContent = `${currentEXP}/${expNeededForLevelUp}`;
+}
+
+function gainEXP(amount) {
+  currentEXP += amount;
+  while (currentEXP >= expNeededForLevelUp) {
+    currentEXP -= expNeededForLevelUp;
+    playerLevel++;
+    expNeededForLevelUp += 20; // Classic scaling difficulty modifier curves
+    alert(`🎉 LEVEL UP! You reached Level ${playerLevel}!`);
+  }
+  updateHUD();
 }
 
 // plants n' stuff
