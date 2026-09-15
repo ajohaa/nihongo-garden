@@ -152,7 +152,6 @@ function updateMovement() {
 requestAnimationFrame(updateMovement);
 
 // question and answer system!
-// Add as many Hiragana/Katakana characters here as you'd like to test!
 const kanaBank = [
     { romaji: "a", hiragana: "あ", katakana: "ア" },
     { romaji: "i", hiragana: "い", katakana: "イ" },
@@ -233,7 +232,7 @@ document.querySelectorAll(".mode-btn").forEach(btn => {
 
 function openQuizModal() {
   overlay.classList.remove("hidden");
-  menuScreen.classList.remove("hidden"); // Always route back to your choice center
+  menuScreen.classList.remove("hidden"); // Always route back to choice center
   gameScreen.classList.add("hidden");
   isGamePaused = true; // Signals character movement updates to halt execution
 }
@@ -337,4 +336,174 @@ function checkKanaAnswer(selectedButton, chosenText) {
   
   nextBtn.addEventListener("click", nextQuestionSession);
   choicesContainer.appendChild(nextBtn);
+}
+
+// plants n' stuff
+
+let playerStats = {
+  coins: 10, // Start out with enough to buy a couple of basic seeds
+  inventory: {
+    carrotSeeds: 2,
+    tomatoSeeds: 0,
+    cornSeeds: 0
+  }
+};
+
+// Represents the interactive soil plots on screen
+let gardenPlots = [
+  { id: 1, isPlanted: false, cropType: null, questionsAnswered: 0, currentStage: 0 },
+  { id: 2, isPlanted: false, cropType: null, questionsAnswered: 0, currentStage: 0 },
+  { id: 3, isPlanted: false, cropType: null, questionsAnswered: 0, currentStage: 0 }
+];
+
+function progressGardenGrowth() {
+  gardenPlots.forEach(plot => {
+    // Only grow plants that are currently seeded and not fully matured yet
+    if (plot.isPlanted && plot.currentStage < seedCatalog[plot.cropType].maxStages) {
+      plot.questionsAnswered++;
+      
+      const cropInfo = seedCatalog[plot.cropType];
+      
+      // Calculate if it's time to advance to the next sprite stage
+      // e.g., if it needs 3 questions total and has 3 stages, it grows every 1 correct answer
+      let questionsPerStage = cropInfo.requiredQuestions / cropInfo.maxStages;
+      
+      if (plot.questionsAnswered >= (plot.currentStage + 1) * questionsPerStage) {
+        plot.currentStage++;
+        console.log(`Plot ${plot.id}: Your ${cropInfo.name} grew to stage ${plot.currentStage}!`);
+        
+        // This is where the code will eventually swap the sprite image
+        // plotElement.src = `${plot.cropType}_stage${plot.currentStage}.png`;
+      }
+    }
+  });
+}
+
+// shop system
+
+const seedCatalog = {
+  carrot: {
+    name: "Carrot",
+    buyPrice: 5,
+    requiredQuestions: 3, // quick, early game starter
+    sellPrice: 10,
+    maxStages: 3          // e.g., seed, sprout, ready
+  },
+  tomato: {
+    name: "Tomato",
+    buyPrice: 15,
+    requiredQuestions: 5, // Mid-tier
+    sellPrice: 30,
+    maxStages: 4          // e.g., seed, sprout, stalk, ripe
+  },
+  corn: {
+    name: "Corn",
+    buyPrice: 30,
+    requiredQuestions: 10, // Premium crop!
+    sellPrice: 60,
+    maxStages: 5          // e.g., seed, sprout, stalk, cob, ripe
+  }
+};
+
+let playerWallet = 10; 
+let playerInventory = {
+  // Seeds available for planting
+  carrotSeeds: 2, tomatoSeeds: 0, cornSeeds: 0,
+  // Harvested mature crops available to sell
+  harvestedCarrot: 2, harvestedTomato: 0, harvestedCorn: 0
+};
+
+let currentShopTab = "buy"; // 'buy' or 'sell'
+
+const shopOpenBtn = document.getElementById("shop-btn");
+const shopOverlay = document.getElementById("shop-modal-overlay");
+const shopCloseBtn = document.getElementById("close-shop-btn");
+const tabBuyBtn = document.getElementById("tab-buy-btn");
+const tabSellBtn = document.getElementById("tab-sell-btn");
+const itemsContainer = document.getElementById("shop-items-container");
+const walletDisplay = document.getElementById("wallet-coins");
+
+shopOpenBtn.addEventListener("click", () => {
+  shopOverlay.classList.remove("hidden");
+  isGamePaused = true; // Freeze walking input arrays
+  updateShopUI();
+});
+
+shopCloseBtn.addEventListener("click", () => {
+  shopOverlay.classList.add("hidden");
+  isGamePaused = false; // Restore movement capabilities
+});
+
+tabBuyBtn.addEventListener("click", () => { switchTab("buy"); });
+tabSellBtn.addEventListener("click", () => { switchTab("sell"); });
+
+function switchTab(tabName) {
+  currentShopTab = tabName;
+  if (tabName === "buy") {
+    tabBuyBtn.classList.add("active-tab");
+    tabSellBtn.classList.remove("active-tab");
+  } else {
+    tabSellBtn.classList.add("active-tab");
+    tabBuyBtn.classList.remove("active-tab");
+  }
+  updateShopUI();
+}
+
+function updateShopUI() {
+  walletDisplay.textContent = playerWallet; // Refresh coin display text
+  itemsContainer.innerHTML = ""; // Clear existing elements
+
+  Object.values(seedCatalog).forEach(crop => {
+    const card = document.createElement("div");
+    card.classList.add("shop-card");
+
+    if (currentShopTab === "buy") {
+      // --- BUY TAB INTERFACE ---
+      const ownedSeeds = playerInventory[`${crop.id}Seeds`] || 0;
+      card.innerHTML = `
+        <h3>${crop.name}</h3>
+        <p>Price: ${crop.buyPrice} 🪙</p>
+        <p>Owned: ${ownedSeeds}</p>
+        <button class="shop-action-btn">Buy 1</button>
+      `;
+      // later going to add a thing where you can buy multiple at a time
+      const buyActionBtn = card.querySelector("button");
+      if (playerWallet < crop.buyPrice) buyActionBtn.disabled = true; // Disable if poor
+      buyActionBtn.addEventListener("click", () => buySeedItem(crop));
+      
+    } else {
+      // --- SELL TAB INTERFACE ---
+      const ownedCrops = playerInventory[`harvested${crop.id.charAt(0).toUpperCase() + crop.id.slice(1)}`] || 0;
+      card.innerHTML = `
+        <h3>Ripe ${crop.name.replace(" Seed", "")}</h3>
+        <p>Value: ${crop.sellPrice} 🪙</p>
+        <p>In Bag: ${ownedCrops}</p>
+        <button class="shop-action-btn" style="background-color: #4CAF50;">Sell 1</button>
+      `;
+      
+      const sellActionBtn = card.querySelector("button");
+      if (ownedCrops <= 0) sellActionBtn.disabled = true; // Disable if none owned
+      sellActionBtn.addEventListener("click", () => sellCropItem(crop));
+    }
+
+    itemsContainer.appendChild(card);
+  });
+}
+
+// 5. Transaction Handlers
+function buySeedItem(crop) {
+  if (playerWallet >= crop.buyPrice) {
+    playerWallet -= crop.buyPrice;
+    playerInventory[`${crop.id}Seeds`]++;
+    updateShopUI();
+  }
+}
+
+function sellCropItem(crop) {
+  const cropKey = `harvested${crop.id.charAt(0).toUpperCase() + crop.id.slice(1)}`;
+  if (playerInventory[cropKey] > 0) {
+    playerInventory[cropKey]--;
+    playerWallet += crop.sellPrice;
+    updateShopUI();
+  }
 }
