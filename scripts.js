@@ -202,44 +202,88 @@ const kanaBank = [
     { romaji: "n", hiragana: "ん", katakana: "ン" }
 ];
 
-let totalCorrectAnswers = 0; // Tracks master garden progress points
-let currentQuestion = null;   // Stores active runtime question properties
+// 2. RUNTIME GAME VARIABLES
+let totalCorrectAnswers = 0; 
+let currentQuestion = null;  
+let currentMode = "free";    
+let isGamePaused = false;  
+
+const openBtn = document.getElementById("practice-btn");
+const overlay = document.getElementById("quiz-modal-overlay");
+const closeBtn = document.getElementById("close-modal-btn");
+const menuScreen = document.getElementById("mode-selection-menu");
+const gameScreen = document.getElementById("question-gameplay-screen");
+const questionText = document.getElementById("question-text");
+const choicesContainer = document.getElementById("choices-container");
+const feedbackText = document.getElementById("feedback-text");
+
+openBtn.addEventListener("click", openQuizModal);
+closeBtn.addEventListener("click", closeQuizModal);
+
+document.querySelectorAll(".mode-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    currentMode = btn.dataset.mode;
+    
+    menuScreen.classList.add("hidden");
+    gameScreen.classList.remove("hidden");
+    
+    nextQuestionSession();
+  });
+});
+
+function openQuizModal() {
+  overlay.classList.remove("hidden");
+  menuScreen.classList.remove("hidden"); // Always route back to your choice center
+  gameScreen.classList.add("hidden");
+  isGamePaused = true; // Signals character movement updates to halt execution
+}
+
+function closeQuizModal() {
+  overlay.classList.add("hidden");
+  feedbackText.classList.add("hidden");
+  isGamePaused = false; // Restores responsive standard walk capabilities
+}
 
 function generateRandomQuestion() {
-  // 1. Pick a random target character from the dictionary array
   const targetIndex = Math.floor(Math.random() * kanaBank.length);
   const target = kanaBank[targetIndex];
-
-  // 2. Decide question type: 0 = "What sound?", 1 = "Which character?"
-  const questionType = Math.floor(Math.random() * 2);
   
-  // 3. Randomly choose whether to test Hiragana or Katakana this turn
-  const isHiragana = Math.random() < 0.5;
-  const scriptName = isHiragana ? "Hiragana" : "Katakana";
-  const kanaChar = isHiragana ? target.hiragana : target.katakana;
-
   let questionText = "";
   let correctAnswerText = "";
   let wrongChoicesPool = [];
 
-  if (questionType === 0) {
-    // Format A: "What sound does the character あ make?"
-    questionText = `What sound does the ${scriptName} character "${kanaChar}" make?`;
-    correctAnswerText = target.romaji;
-    // Pool incorrect options from other Romaji values
-    wrongChoicesPool = kanaBank.filter(k => k.romaji !== target.romaji).map(k => k.romaji);
+  let isHiragana = true;
+  if (currentMode === "katakana") isHiragana = false;
+  if (currentMode === "free") isHiragana = Math.random() < 0.5; // Toggle balanced coin flip
+  
+  const scriptName = isHiragana ? "Hiragana" : "Katakana";
+  const kanaChar = isHiragana ? target.hiragana : target.katakana;
+
+  if (currentMode === "matching") {
+    // Mode C: Connection Matching 
+    questionText = `Match the Hiragana character "${target.hiragana}" to its Katakana pair:`;
+    correctAnswerText = target.katakana;
+    wrongChoicesPool = kanaBank.filter(k => k.romaji !== target.romaji).map(k => k.katakana);
+    
   } else {
-    // Format B: "Which character makes the sound 'ka'?"
-    questionText = `Which ${scriptName} character makes the sound "${target.romaji}"?`;
-    correctAnswerText = kanaChar;
-    // Pool incorrect options from other matching script items
-    wrongChoicesPool = kanaBank.filter(k => k.romaji !== target.romaji).map(k => isHiragana ? k.hiragana : k.katakana);
+    // Modes A & B: Sub-split into Identification vs Sound prompts
+    const subType = Math.floor(Math.random() * 2);
+    
+    if (subType === 0) {
+      questionText = `What sound does the ${scriptName} character "${kanaChar}" make?`;
+      correctAnswerText = target.romaji;
+      wrongChoicesPool = kanaBank.filter(k => k.romaji !== target.romaji).map(k => k.romaji);
+    } else {
+      questionText = `Which ${scriptName} character makes the sound "${target.romaji}"?`;
+      correctAnswerText = kanaChar;
+      wrongChoicesPool = kanaBank.filter(k => k.romaji !== target.romaji).map(k => isHiragana ? k.hiragana : k.katakana);
+    }
   }
 
-  // 4. Shuffle choices to get 3 random wrong answers + 1 right answer
+  // Shuffle selections array down to exactly 3 wrong items + 1 right choice
   wrongChoicesPool.sort(() => 0.5 - Math.random());
   const finalChoices = [correctAnswerText, wrongChoicesPool[0], wrongChoicesPool[1], wrongChoicesPool[2]];
-  finalChoices.sort(() => 0.5 - Math.random()); // Mix them together
+  finalChoices.sort(() => 0.5 - Math.random()); // Scramble presentation order layouts
 
   return {
     prompt: questionText,
@@ -248,34 +292,10 @@ function generateRandomQuestion() {
   };
 }
 
-let score = 0;
-let currentQuestionIndex = 0;
-let isGamePaused = false; // Flag to freeze player movement while reading
-
-// 3. Document Element References
-const openBtn = document.getElementById("practice-btn");
-const overlay = document.getElementById("quiz-modal-overlay");
-const closeBtn = document.getElementById("close-modal-btn");
-const questionText = document.getElementById("question-text");
-const choicesContainer = document.getElementById("choices-container");
-const feedbackText = document.getElementById("feedback-text");
-
-// 4. Modal Visibility Controllers
-openBtn.addEventListener("click", openQuizModal);
-closeBtn.addEventListener("click", closeQuizModal);
-
-// HTML elements reference variables remain the same as previous setup
-function openQuizModal() {
-  overlay.classList.remove("hidden");
-  isGamePaused = true; 
-  nextQuestionSession(); // Jump straight into a brand new random prompt
-}
-
 function nextQuestionSession() {
   feedbackText.classList.add("hidden");
   choicesContainer.innerHTML = ""; 
 
-  // Generate completely fresh random properties on execution
   currentQuestion = generateRandomQuestion();
   questionText.textContent = currentQuestion.prompt;
 
@@ -296,8 +316,8 @@ function checkKanaAnswer(selectedButton, chosenText) {
   choiceButtons.forEach(btn => btn.disabled = true);
 
   if (chosenText === currentQuestion.correct) {
-    totalCorrectAnswers++; // Global growth point tier increments seamlessly!
-    feedbackText.textContent = "✨ Correct! Your garden feels a tiny burst of energy.";
+    totalCorrectAnswers++; 
+    feedbackText.textContent = "✨ Great job! Your garden is thriving.";
     feedbackText.className = "correct-msg";
     selectedButton.style.borderColor = "#2e7d32";
     selectedButton.style.backgroundColor = "#e8f5e9";
@@ -308,8 +328,6 @@ function checkKanaAnswer(selectedButton, chosenText) {
     selectedButton.style.backgroundColor = "#ffebee";
   }
 
-  // Create an explicit, user-triggered action pathway to clear the block
-  // Instead of closing automatically, we let them click to load the next character prompt
   const nextBtn = document.createElement("button");
   nextBtn.id = "modal-next-action-btn";
   nextBtn.textContent = "Next Question 👉";

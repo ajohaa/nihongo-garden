@@ -25,8 +25,19 @@
 <div id="quiz-modal-overlay" class="hidden">
   <div id="quiz-modal-box">
     <button id="close-modal-btn">&times;</button>
+    <!-- 🎯 NEW: Mode Selection Screen -->
+  <div id="mode-selection-menu">
+    <h2>Select Your Practice Mode</h2>
+    <div class="menu-grid">
+      <button class="mode-btn" data-mode="hiragana">🇯🇵 Hiragana</button>
+      <button class="mode-btn" data-mode="katakana">🎏 Katakana</button>
+      <button class="mode-btn" data-mode="matching">🧩 Kana Matching</button>
+      <button class="mode-btn" data-mode="free">🌟 Free Mode</button>
+    </div>
+  </div>
+  <div id="question-gameplay-screen" class="hidden">
     <div id="question-text">Loading question...</div>
-    <div id="choices-container">
+    <div id="choices-container"></div>
       <!-- 4 answer choices will be dynamically injected here via JS -->
     </div>
     <div id="feedback-text" class="hidden"></div>
