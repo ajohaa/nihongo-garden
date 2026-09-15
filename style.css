@@ -25,3 +25,113 @@ body {
   height: auto;
   display: block;
 }
+
+/* Position the Practice button in the bottom right corner */
+#practice-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  z-index: 1000; /* Keeps it above the player and plants */
+}
+
+#practice-btn:hover {
+  background-color: #45a049;
+}
+
+/* Full screen dark backdrop overlay */
+#quiz-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5); /* Dimmed background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000; /* Always sits on top of the whole game */
+}
+
+/* The actual white prompt alert box */
+#quiz-modal-box {
+  background-color: white;
+  padding: 30px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+/* Little X close button */
+#close-modal-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+#question-text {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* Choices Grid Layout */
+#choices-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.choice-btn {
+  padding: 12px;
+  font-size: 16px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  background-color: #fafafa;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.choice-btn:hover {
+  background-color: #f0f0f0;
+  border-color: #bbb;
+}
+
+/* Helpful visibility toggle */
+.hidden {
+  display: none !important;
+}
+
+/* Success/Error message colors */
+#feedback-text {
+  margin-top: 15px;
+  font-weight: bold;
+  font-size: 16px;
+}
+.correct-msg { color: #2e7d32; }
+.wrong-msg { color: #c62828; }
+
+#modal-next-action-btn {
+  background-color: #2196F3 !important;
+  color: white !important;
+  font-weight: bold;
+  border: none !important;
+}
+#modal-next-action-btn:hover {
+  background-color: #1e88e5 !important;
+}

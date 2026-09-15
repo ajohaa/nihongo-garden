@@ -50,6 +50,10 @@ let animationTimer = 0;
 const ANIMATION_SPEED = 5; // Higher = slower switching (e.g., switch frame every 10 ticks)
 
 function updateMovement() {
+    if (isGamePaused) {
+        requestAnimationFrame(updateMovement);
+        return; 
+    }
     let dx = 0;
     let dy = 0;
 
@@ -146,3 +150,173 @@ function updateMovement() {
 }
 
 requestAnimationFrame(updateMovement);
+
+// question and answer system!
+// Add as many Hiragana/Katakana characters here as you'd like to test!
+const kanaBank = [
+    { romaji: "a", hiragana: "あ", katakana: "ア" },
+    { romaji: "i", hiragana: "い", katakana: "イ" },
+    { romaji: "u", hiragana: "う", katakana: "ウ" },
+    { romaji: "e", hiragana: "え", katakana: "エ" },
+    { romaji: "o", hiragana: "お", katakana: "オ" },
+    { romaji: "ka", hiragana: "か", katakana: "カ" },
+    { romaji: "ki", hiragana: "き", katakana: "キ" },
+    { romaji: "ku", hiragana: "く", katakana: "ク" },
+    { romaji: "ke", hiragana: "け", katakana: "ケ" },
+    { romaji: "ko", hiragana: "こ", katakana: "コ" },
+    { romaji: "sa", hiragana: "さ", katakana: "サ" },
+    { romaji: "shi", hiragana: "し", katakana: "シ" },
+    { romaji: "su", hiragana: "す", katakana: "ス" },
+    { romaji: "se", hiragana: "せ", katakana: "セ" },
+    { romaji: "so", hiragana: "そ", katakana: "ソ" },
+    { romaji: "ta", hiragana: "た", katakana: "タ" },
+    { romaji: "chi", hiragana: "ち", katakana: "チ" },
+    { romaji: "tsu", hiragana: "つ", katakana: "ツ" },
+    { romaji: "te", hiragana: "て", katakana: "テ" },
+    { romaji: "to", hiragana: "と", katakana: "ト" },
+    { romaji: "na", hiragana: "な", katakana: "ナ" },
+    { romaji: "ni", hiragana: "に", katakana: "ニ" },
+    { romaji: "nu", hiragana: "ぬ", katakana: "ヌ" },
+    { romaji: "ne", hiragana: "ね", katakana: "ネ" },
+    { romaji: "no", hiragana: "の", katakana: "ノ" },
+    { romaji: "ha", hiragana: "は", katakana: "ハ" },
+    { romaji: "hi", hiragana: "ひ", katakana: "ヒ" },
+    { romaji: "fu", hiragana: "ふ", katakana: "フ" },
+    { romaji: "he", hiragana: "へ", katakana: "ヘ" },
+    { romaji: "ho", hiragana: "ほ", katakana: "ホ" },   
+    { romaji: "ma", hiragana: "ま", katakana: "マ" },
+    { romaji: "mi", hiragana: "み", katakana: "ミ" },
+    { romaji: "mu", hiragana: "む", katakana: "ム" },
+    { romaji: "me", hiragana: "め", katakana: "メ" },
+    { romaji: "mo", hiragana: "も", katakana: "モ" },
+    { romaji: "ya", hiragana: "や", katakana: "ヤ" },
+    { romaji: "yu", hiragana: "ゆ", katakana: "ユ" },
+    { romaji: "yo", hiragana: "よ", katakana: "ヨ" },
+    { romaji: "ra", hiragana: "ら", katakana: "ラ" },
+    { romaji: "ri", hiragana: "り", katakana: "リ" },
+    { romaji: "ru", hiragana: "る", katakana: "ル" },
+    { romaji: "re", hiragana: "れ", katakana: "レ" },
+    { romaji: "ro", hiragana: "ろ", katakana: "ロ" },
+    { romaji: "wa", hiragana: "わ", katakana: "ワ" },
+    { romaji: "wo", hiragana: "を", katakana: "ヲ" },
+    { romaji: "n", hiragana: "ん", katakana: "ン" }
+];
+
+let totalCorrectAnswers = 0; // Tracks master garden progress points
+let currentQuestion = null;   // Stores active runtime question properties
+
+function generateRandomQuestion() {
+  // 1. Pick a random target character from the dictionary array
+  const targetIndex = Math.floor(Math.random() * kanaBank.length);
+  const target = kanaBank[targetIndex];
+
+  // 2. Decide question type: 0 = "What sound?", 1 = "Which character?"
+  const questionType = Math.floor(Math.random() * 2);
+  
+  // 3. Randomly choose whether to test Hiragana or Katakana this turn
+  const isHiragana = Math.random() < 0.5;
+  const scriptName = isHiragana ? "Hiragana" : "Katakana";
+  const kanaChar = isHiragana ? target.hiragana : target.katakana;
+
+  let questionText = "";
+  let correctAnswerText = "";
+  let wrongChoicesPool = [];
+
+  if (questionType === 0) {
+    // Format A: "What sound does the character あ make?"
+    questionText = `What sound does the ${scriptName} character "${kanaChar}" make?`;
+    correctAnswerText = target.romaji;
+    // Pool incorrect options from other Romaji values
+    wrongChoicesPool = kanaBank.filter(k => k.romaji !== target.romaji).map(k => k.romaji);
+  } else {
+    // Format B: "Which character makes the sound 'ka'?"
+    questionText = `Which ${scriptName} character makes the sound "${target.romaji}"?`;
+    correctAnswerText = kanaChar;
+    // Pool incorrect options from other matching script items
+    wrongChoicesPool = kanaBank.filter(k => k.romaji !== target.romaji).map(k => isHiragana ? k.hiragana : k.katakana);
+  }
+
+  // 4. Shuffle choices to get 3 random wrong answers + 1 right answer
+  wrongChoicesPool.sort(() => 0.5 - Math.random());
+  const finalChoices = [correctAnswerText, wrongChoicesPool[0], wrongChoicesPool[1], wrongChoicesPool[2]];
+  finalChoices.sort(() => 0.5 - Math.random()); // Mix them together
+
+  return {
+    prompt: questionText,
+    choices: finalChoices,
+    correct: correctAnswerText
+  };
+}
+
+let score = 0;
+let currentQuestionIndex = 0;
+let isGamePaused = false; // Flag to freeze player movement while reading
+
+// 3. Document Element References
+const openBtn = document.getElementById("practice-btn");
+const overlay = document.getElementById("quiz-modal-overlay");
+const closeBtn = document.getElementById("close-modal-btn");
+const questionText = document.getElementById("question-text");
+const choicesContainer = document.getElementById("choices-container");
+const feedbackText = document.getElementById("feedback-text");
+
+// 4. Modal Visibility Controllers
+openBtn.addEventListener("click", openQuizModal);
+closeBtn.addEventListener("click", closeQuizModal);
+
+// HTML elements reference variables remain the same as previous setup
+function openQuizModal() {
+  overlay.classList.remove("hidden");
+  isGamePaused = true; 
+  nextQuestionSession(); // Jump straight into a brand new random prompt
+}
+
+function nextQuestionSession() {
+  feedbackText.classList.add("hidden");
+  choicesContainer.innerHTML = ""; 
+
+  // Generate completely fresh random properties on execution
+  currentQuestion = generateRandomQuestion();
+  questionText.textContent = currentQuestion.prompt;
+
+  currentQuestion.choices.forEach(choice => {
+    const button = document.createElement("button");
+    button.classList.add("choice-btn");
+    button.textContent = choice;
+    button.addEventListener("click", () => checkKanaAnswer(button, choice));
+    choicesContainer.appendChild(button);
+  });
+}
+
+function checkKanaAnswer(selectedButton, chosenText) {
+  feedbackText.classList.remove("hidden");
+  
+  // Lock selection choices immediately
+  const choiceButtons = choicesContainer.querySelectorAll(".choice-btn");
+  choiceButtons.forEach(btn => btn.disabled = true);
+
+  if (chosenText === currentQuestion.correct) {
+    totalCorrectAnswers++; // Global growth point tier increments seamlessly!
+    feedbackText.textContent = "✨ Correct! Your garden feels a tiny burst of energy.";
+    feedbackText.className = "correct-msg";
+    selectedButton.style.borderColor = "#2e7d32";
+    selectedButton.style.backgroundColor = "#e8f5e9";
+  } else {
+    feedbackText.textContent = `❌ Not quite! The correct answer was "${currentQuestion.correct}".`;
+    feedbackText.className = "wrong-msg";
+    selectedButton.style.borderColor = "#c62828";
+    selectedButton.style.backgroundColor = "#ffebee";
+  }
+
+  // Create an explicit, user-triggered action pathway to clear the block
+  // Instead of closing automatically, we let them click to load the next character prompt
+  const nextBtn = document.createElement("button");
+  nextBtn.id = "modal-next-action-btn";
+  nextBtn.textContent = "Next Question 👉";
+  nextBtn.style.marginTop = "20px";
+  nextBtn.style.padding = "10px 20px";
+  nextBtn.className = "choice-btn"; 
+  
+  nextBtn.addEventListener("click", nextQuestionSession);
+  choicesContainer.appendChild(nextBtn);
+}

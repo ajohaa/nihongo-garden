@@ -18,6 +18,20 @@
     <div class="character" id="player">
       <img src="idle180.png">
     </div>
+    <!-- 1. The Practice Button in the corner -->
+<button id="practice-btn">🌱 Practice</button>
+
+<!-- 2. The Pop-up Modal Container (Hidden by default) -->
+<div id="quiz-modal-overlay" class="hidden">
+  <div id="quiz-modal-box">
+    <button id="close-modal-btn">&times;</button>
+    <div id="question-text">Loading question...</div>
+    <div id="choices-container">
+      <!-- 4 answer choices will be dynamically injected here via JS -->
+    </div>
+    <div id="feedback-text" class="hidden"></div>
+  </div>
+</div>
   </div>
   <script src="scripts.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
