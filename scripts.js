@@ -16,7 +16,25 @@ const keyMap = {
     'ArrowRight': 'right', 'd': 'right', 'D': 'right'
 };
 
+function isTextInput(target) {
+  return target instanceof HTMLInputElement
+    || target instanceof HTMLTextAreaElement
+    || target.isContentEditable;
+}
+
 window.addEventListener("keydown", (event) => {
+  if (isTextInput(event.target)) return;
+
+  if (event.key.toLowerCase() === "e") {
+    toggleInventory();
+    return;
+  }
+
+  if (event.key.toLowerCase() === "f") {
+    if (nearbyInteraction?.type === "harvest") harvestCrop(nearbyInteraction.plotId, nearbyInteraction.slotIndex);
+    return;
+  }
+
     if (keyMap[event.key]) {
         event.preventDefault();
         movement[keyMap[event.key]] = true;
@@ -130,6 +148,7 @@ function updateMovement() {
 
       // Position the wrapper and handle the horizontal left-flip transform
       playerWrapper.style.transform = `translate(${player.x}px, ${player.y}px) scaleX(${shouldFlip ? -1 : 1})`;
+      updateInteractionPrompt();
     }
 
     requestAnimationFrame(updateMovement);
@@ -187,7 +206,7 @@ const kanaBank = [
     { romaji: "n", hiragana: "ん", katakana: "ン" }
 ];
 
-let playerLevel = 0;
+let playerLevel = 1;
 let currentEXP = 0;
 let expNeededForLevelUp = 100;
 let totalCorrectAnswers = 0;
@@ -288,18 +307,14 @@ function endTimedPracticeSession() {
 
   const expGained = timedSessionCorrectCount * 2; 
   
-  // 1. Show the summary results panel cleanly
   questionText.textContent = "⏱️ Time's Up!";
   feedbackText.classList.remove("hidden");
   feedbackText.className = "correct-msg";
   feedbackText.innerHTML = `Great job! You answered <strong>${timedSessionCorrectCount}</strong> questions correctly.<br>🎉 Gained <strong>+${expGained} EXP</strong>!`;
-  
-  // 2. Clear out old answer choice buttons
   choicesContainer.innerHTML = "";
   
   gainEXP(expGained);
 
-  // 3. Generate the action button
   const menuReturnBtn = document.createElement("button");
   menuReturnBtn.className = "choice-btn";
   menuReturnBtn.textContent = "Return to Menu";
@@ -307,7 +322,7 @@ function endTimedPracticeSession() {
   
   menuReturnBtn.addEventListener("click", () => {
     feedbackText.classList.add("hidden"); 
-    feedbackText.innerHTML = ""; // Completely wipe the text out of memory
+    feedbackText.innerHTML = "";
     
     menuScreen.classList.remove("hidden");
     gameScreen.classList.add("hidden");
@@ -398,7 +413,9 @@ function checkKanaAnswer(selectedButton, chosenText) {
     if (currentMode === "timed") {
       timedSessionCorrectCount++; 
     } else {
-    totalCorrectAnswers++; }
+      totalCorrectAnswers++;
+    }
+    progressGardenGrowth();
     feedbackText.textContent = "✨ Great job! Your answer is correct.";
     feedbackText.className = "correct-msg";
     selectedButton.style.borderColor = "#2e7d32";
@@ -439,71 +456,327 @@ function updateHUD() {
 // plants n' stuff
 
 // Represents the interactive soil plots on screen
-let gardenPlots = [
-  { id: 1, isPlanted: false, cropType: null, questionsAnswered: 0, currentStage: 0 },
-  { id: 2, isPlanted: false, cropType: null, questionsAnswered: 0, currentStage: 0 },
-  { id: 3, isPlanted: false, cropType: null, questionsAnswered: 0, currentStage: 0 }
+const dirtTileImages = [
+  "dirt/dirt_01.png",
+  "dirt/dirt_03.png",
+  "dirt/dirt_06.png",
+  "dirt/dirt_08.png"
 ];
+const maxGardenPlots = 6;
+const interactionDistance = 90;
+const plotsContainer = document.getElementById("plots-container");
+let nearbyInteraction = null;
+let plantingTarget = null;
+
+function createGardenPlot(id) {
+  return { id, plants: [null, null, null, null] };
+}
+
+let gardenPlots = [createGardenPlot(1)];
+gardenPlots[0].plants[0] = {
+  cropType: "wheat",
+  image: "crops, seeds, signs, items/wheat4.png",
+  questionsAnswered: 4,
+  currentStage: 4
+};
+
+function getStageImage(cropType, stage) {
+  return `crops, seeds, signs, items/${cropType}${Math.max(1, Math.min(stage, 4))}.png`;
+}
+
+function renderGardenPlots() {
+  plotsContainer.innerHTML = "";
+  const plotRow = document.createElement("div");
+  plotRow.className = "row plot-row";
+
+  gardenPlots.slice(0, maxGardenPlots).forEach(plot => {
+    const plotColumn = document.createElement("div");
+    plotColumn.className = "col-4 plot-slot";
+
+    const plotElement = document.createElement("div");
+    plotElement.className = "garden-plot";
+    plotElement.dataset.plotId = plot.id;
+
+    plot.plants.forEach((plant, slotIndex) => {
+      const plantWrapper = document.createElement("div");
+      plantWrapper.className = "plant-wrapper";
+      plantWrapper.dataset.plotId = plot.id;
+      plantWrapper.dataset.slotIndex = slotIndex;
+      plantWrapper.style.backgroundImage = `url("${dirtTileImages[slotIndex]}")`;
+
+      if (plant?.image) {
+        const cropImage = document.createElement("img");
+        cropImage.className = "crop-image";
+        cropImage.src = plant.image;
+        cropImage.alt = plant.cropType || "Growing crop";
+        plantWrapper.appendChild(cropImage);
+      }
+
+      const interactionButton = document.createElement("button");
+      interactionButton.className = "plot-interaction-btn hidden";
+      interactionButton.type = "button";
+      interactionButton.addEventListener("click", () => handleNearbyInteraction(plot.id, slotIndex));
+      plantWrapper.appendChild(interactionButton);
+
+      if (plantingTarget && !plant) {
+        plantWrapper.classList.add("planting-slot");
+        plantWrapper.addEventListener("click", () => {
+          plantCrop(plot.id, slotIndex, plantingTarget.cropType);
+        });
+      }
+
+      plotElement.appendChild(plantWrapper);
+    });
+
+    plotColumn.appendChild(plotElement);
+    plotRow.appendChild(plotColumn);
+  });
+
+  plotsContainer.appendChild(plotRow);
+}
+
+function getPlotPlant(plotId, slotIndex) {
+  const plot = gardenPlots.find(currentPlot => currentPlot.id === plotId);
+  return plot?.plants[slotIndex] || null;
+}
+
+function plantCrop(plotId, slotIndex, cropType, image = getStageImage(cropType, 1)) {
+  const plot = gardenPlots.find(currentPlot => currentPlot.id === plotId);
+  const crop = seedCatalog[cropType];
+  const seedKey = `${cropType}Seeds`;
+  if (!plot || !crop || slotIndex < 0 || slotIndex >= dirtTileImages.length
+    || plot.plants[slotIndex] || !playerInventory[seedKey]
+    || plantingTarget?.cropType !== cropType) return false;
+
+  plot.plants[slotIndex] = {
+    cropType,
+    image,
+    questionsAnswered: 0,
+    currentStage: 0
+  };
+  playerInventory[seedKey]--;
+  if (playerInventory[seedKey] <= 0) plantingTarget = null;
+  inventoryPanel.classList.add("hidden");
+  isGamePaused = false;
+  renderGardenPlots();
+  renderInventory();
+  return true;
+}
+
+function harvestCrop(plotId, slotIndex) {
+  const plant = getPlotPlant(plotId, slotIndex);
+  if (!plant || !seedCatalog[plant.cropType] || plant.currentStage < seedCatalog[plant.cropType].maxStages
+    || !hasInventorySpace()) return false;
+
+  const plot = gardenPlots.find(currentPlot => currentPlot.id === plotId);
+  const harvestedKey = `harvested${plant.cropType.charAt(0).toUpperCase()}${plant.cropType.slice(1)}`;
+  plot.plants[slotIndex] = null;
+  playerInventory[harvestedKey] = (playerInventory[harvestedKey] || 0) + 1;
+  nearbyInteraction = null;
+  renderGardenPlots();
+  renderInventory();
+  return true;
+}
+
+function handleNearbyInteraction(plotId, slotIndex) {
+  const interaction = nearbyInteraction;
+  if (!interaction || interaction.plotId !== plotId || interaction.slotIndex !== slotIndex) return;
+  if (interaction.type === "harvest") harvestCrop(plotId, slotIndex);
+}
+
+function updateInteractionPrompt() {
+  const playerElement = document.getElementById("player");
+  if (!playerElement) return;
+
+  const playerRect = playerElement.getBoundingClientRect();
+  const playerCenter = {
+    x: playerRect.left + playerRect.width / 2,
+    y: playerRect.top + playerRect.height / 2
+  };
+  let closestInteraction = null;
+  let closestDistance = interactionDistance;
+
+  document.querySelectorAll(".plant-wrapper").forEach(wrapper => {
+    const plotId = Number(wrapper.dataset.plotId);
+    const slotIndex = Number(wrapper.dataset.slotIndex);
+    const plant = getPlotPlant(plotId, slotIndex);
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const slotCenter = {
+      x: wrapperRect.left + wrapperRect.width / 2,
+      y: wrapperRect.top + wrapperRect.height / 2
+    };
+    const distance = Math.hypot(playerCenter.x - slotCenter.x, playerCenter.y - slotCenter.y);
+    let type = null;
+
+    if (plant && seedCatalog[plant.cropType] && plant.currentStage >= seedCatalog[plant.cropType].maxStages
+      && hasInventorySpace() && distance <= closestDistance) type = "harvest";
+    if (!type) return;
+
+    closestDistance = distance;
+    closestInteraction = { type, plotId, slotIndex, wrapper };
+  });
+
+  document.querySelectorAll(".plot-interaction-btn").forEach(button => {
+    button.classList.add("hidden");
+  });
+  document.querySelectorAll(".plant-wrapper").forEach(wrapper => {
+    wrapper.classList.remove("interaction-active");
+  });
+
+  nearbyInteraction = closestInteraction;
+  if (closestInteraction) {
+    const button = closestInteraction.wrapper.querySelector(".plot-interaction-btn");
+    button.textContent = "(F) Harvest";
+    button.classList.remove("hidden");
+    closestInteraction.wrapper.classList.add("interaction-active");
+  }
+}
+
+renderGardenPlots();
 
 function progressGardenGrowth() {
   gardenPlots.forEach(plot => {
-    // Only grow plants that are currently seeded and not fully matured yet
-    if (plot.isPlanted && plot.currentStage < seedCatalog[plot.cropType].maxStages) {
-      plot.questionsAnswered++;
-      
-      const cropInfo = seedCatalog[plot.cropType];
-      
-      // Calculate if it's time to advance to the next sprite stage
-      // e.g., if it needs 3 questions total and has 3 stages, it grows every 1 correct answer
-      let questionsPerStage = cropInfo.requiredQuestions / cropInfo.maxStages;
-      
-      if (plot.questionsAnswered >= (plot.currentStage + 1) * questionsPerStage) {
-        plot.currentStage++;
-        console.log(`Plot ${plot.id}: Your ${cropInfo.name} grew to stage ${plot.currentStage}!`);
-        
-        // This is where the code will eventually swap the sprite image
-        // plotElement.src = `${plot.cropType}_stage${plot.currentStage}.png`;
+    plot.plants.forEach(plant => {
+      const cropInfo = plant && seedCatalog[plant.cropType];
+      if (!cropInfo || !Number.isFinite(cropInfo.requiredQuestions) || plant.currentStage >= cropInfo.maxStages) return;
+
+      plant.questionsAnswered++;
+      const questionsPerStage = cropInfo.requiredQuestions / cropInfo.maxStages;
+
+      if (plant.questionsAnswered >= (plant.currentStage + 1) * questionsPerStage) {
+        plant.currentStage++;
+        plant.image = getStageImage(plant.cropType, plant.currentStage + 1);
+        console.log(`${cropInfo.name} grew to stage ${plant.currentStage}!`);
       }
-    }
+    });
   });
+  renderGardenPlots();
 }
 
 // shop system
 
 const seedCatalog = {
-  carrot: {
-    id: "carrot",
-    name: "Carrot",
-    buyPrice: 5,
-    requiredQuestions: 3, // quick, early game starter
-    sellPrice: 10,
-    maxStages: 3          // e.g., seed, sprout, ready
-  },
-  tomato: {
-    id: "tomato",
-    name: "Tomato",
-    buyPrice: 15,
-    requiredQuestions: 5, // Mid-tier
-    sellPrice: 30,
-    maxStages: 4          // e.g., seed, sprout, stalk, ripe
-  },
-  corn: {
-    id: "corn",
-    name: "Corn",
-    buyPrice: 30,
-    requiredQuestions: 10, // Premium crop!
-    sellPrice: 60,
-    maxStages: 5          // e.g., seed, sprout, stalk, cob, ripe
-  }
+  asparagus: { id: "asparagus", name: "Asparagus", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  beetroot: { id: "beetroot", name: "Beetroot", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  blackberry: { id: "blackberry", name: "Blackberry", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  broccoli: { id: "broccoli", name: "Broccoli", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  carrot: { id: "carrot", name: "Carrot", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  cauliflower: { id: "cauliflower", name: "Cauliflower", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  celery: { id: "celery", name: "Celery", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  chili: { id: "chili", name: "Chili", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  corn: { id: "corn", name: "Corn", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  garlic: { id: "garlic", name: "Garlic", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  greenbeans: { id: "greenbeans", name: "Green Beans", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  leek: { id: "leek", name: "Leek", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  lettuce: { id: "lettuce", name: "Lettuce", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  potato: { id: "potato", name: "Potato", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  pumpkin: { id: "pumpkin", name: "Pumpkin", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  raspberry: { id: "raspberry", name: "Raspberry", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  redcabbage: { id: "redcabbage", name: "Red Cabbage", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  redonion: { id: "redonion", name: "Red Onion", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  redpepper: { id: "redpepper", name: "Red Pepper", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  strawberry: { id: "strawberry", name: "Strawberry", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  sunflower: { id: "sunflower", name: "Sunflower", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  tomato: { id: "tomato", name: "Tomato", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  turnip: { id: "turnip", name: "Turnip", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
+  wheat: { id: "wheat", name: "Wheat", buyPrice: 5, sellPrice: 10, requiredQuestions: 4, maxStages: 4 },
+  zucchini: { id: "zucchini", name: "Zucchini", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 }
 };
 
 let playerWallet = 10; 
 let playerInventory = {
   // Seeds available for planting
-  carrotSeeds: 2, tomatoSeeds: 0, cornSeeds: 0,
+  wheatSeeds: 0,
   // Harvested mature crops available to sell
-  harvestedCarrot: 2, harvestedTomato: 0, harvestedCorn: 0
+  harvestedWheat: 0
 };
+
+const inventoryCapacity = 8;
+const inventoryButton = document.getElementById("inventory-btn");
+const inventoryPanel = document.getElementById("inventory-panel");
+const inventorySlots = document.getElementById("inventory-slots");
+
+function getInventoryItems() {
+  const items = [];
+
+  Object.values(seedCatalog).forEach(crop => {
+    const seedCount = playerInventory[`${crop.id}Seeds`] || 0;
+    const harvestedCount = getHarvestedCropCount(crop);
+
+    if (seedCount > 0) {
+      items.push({ crop, kind: "seed", count: seedCount, image: `crops, seeds, signs, items/${crop.id}-seeds.png`, label: `${crop.name} seed` });
+    }
+    if (harvestedCount > 0) {
+      items.push({ crop, kind: "harvested", count: harvestedCount, image: `crops, seeds, signs, items/${crop.id}-item.png`, label: crop.name });
+    }
+  });
+
+  return items.slice(0, inventoryCapacity);
+}
+
+function hasInventorySpace() {
+  return getInventoryItems().length < inventoryCapacity;
+}
+
+function renderInventory() {
+  inventorySlots.innerHTML = "";
+  const ownedItems = getInventoryItems();
+
+  for (let slotIndex = 0; slotIndex < inventoryCapacity; slotIndex++) {
+    const slot = document.createElement("div");
+    slot.className = "inventory-slot";
+
+    const item = ownedItems[slotIndex];
+    if (item) {
+      const itemImage = document.createElement("img");
+      itemImage.src = item.image;
+      itemImage.alt = item.label;
+      itemImage.title = item.label;
+      slot.appendChild(itemImage);
+
+      const quantity = document.createElement("span");
+      quantity.className = "inventory-quantity";
+      quantity.textContent = item.count;
+      slot.appendChild(quantity);
+
+      if (!plantingTarget && item.kind === "seed") {
+        slot.classList.add("planting-choice");
+        slot.title = `Plant ${item.label}`;
+        slot.addEventListener("click", () => {
+          plantingTarget = { cropType: item.crop.id };
+          inventoryPanel.classList.add("hidden");
+          isGamePaused = false;
+          renderGardenPlots();
+        });
+      }
+    }
+
+    inventorySlots.appendChild(slot);
+  }
+}
+
+function toggleInventory() {
+  if (plantingTarget) {
+    plantingTarget = null;
+    inventoryPanel.classList.add("hidden");
+    isGamePaused = false;
+    renderGardenPlots();
+    return;
+  }
+
+  inventoryPanel.classList.toggle("hidden");
+  if (!inventoryPanel.classList.contains("hidden")) {
+    isGamePaused = true;
+    renderInventory();
+  } else {
+    isGamePaused = false;
+  }
+}
+
+inventoryButton.addEventListener("click", toggleInventory);
+
+renderInventory();
+updateHUD();
 
 let currentShopTab = "buy"; // 'buy' or 'sell'
 
@@ -514,6 +787,7 @@ const tabBuyBtn = document.getElementById("tab-buy-btn");
 const tabSellBtn = document.getElementById("tab-sell-btn");
 const itemsContainer = document.getElementById("shop-items-container");
 const walletDisplay = document.getElementById("wallet-coins");
+const shopSearchInput = document.getElementById("shop-search");
 
 shopOpenBtn.addEventListener("click", () => {
   shopOverlay.classList.remove("hidden");
@@ -528,6 +802,7 @@ shopCloseBtn.addEventListener("click", () => {
 
 tabBuyBtn.addEventListener("click", () => { switchTab("buy"); });
 tabSellBtn.addEventListener("click", () => { switchTab("sell"); });
+shopSearchInput.addEventListener("input", updateShopUI);
 
 function switchTab(tabName) {
   currentShopTab = tabName;
@@ -545,36 +820,62 @@ function updateShopUI() {
   walletDisplay.textContent = playerWallet; // Refresh coin display text
   itemsContainer.innerHTML = ""; // Clear existing elements
 
-  Object.values(seedCatalog).forEach(crop => {
+  const searchTerm = shopSearchInput.value.trim().toLowerCase();
+  const isBuyTab = currentShopTab === "buy";
+  const crops = Object.values(seedCatalog)
+    .filter(crop => crop.name.toLowerCase().includes(searchTerm))
+    .sort((firstCrop, secondCrop) => {
+      const firstConfigured = isBuyTab
+        ? Number.isFinite(firstCrop.buyPrice)
+        : Number.isFinite(firstCrop.sellPrice);
+      const secondConfigured = isBuyTab
+        ? Number.isFinite(secondCrop.buyPrice)
+        : Number.isFinite(secondCrop.sellPrice);
+      const firstOwned = isBuyTab ? 0 : getHarvestedCropCount(firstCrop);
+      const secondOwned = isBuyTab ? 0 : getHarvestedCropCount(secondCrop);
+
+      return Number(secondConfigured) - Number(firstConfigured)
+        || secondOwned - firstOwned
+        || firstCrop.name.localeCompare(secondCrop.name);
+    });
+
+  if (crops.length === 0) {
+    itemsContainer.innerHTML = '<p class="shop-empty-message">No crops match your search.</p>';
+    return;
+  }
+
+  crops.forEach(crop => {
     const card = document.createElement("div");
     card.classList.add("shop-card");
 
     if (currentShopTab === "buy") {
       // --- BUY TAB INTERFACE ---
       const ownedSeeds = playerInventory[`${crop.id}Seeds`] || 0;
+      const hasBuyPrice = Number.isFinite(crop.buyPrice);
       card.innerHTML = `
         <h3>${crop.name}</h3>
-        <p>Price: ${crop.buyPrice} 🪙</p>
+        <p>Price: ${hasBuyPrice ? `${crop.buyPrice} 🪙` : "Unavailable"}</p>
         <p>Owned: ${ownedSeeds}</p>
-        <button class="shop-action-btn">Buy 1</button>
+        <button class="shop-action-btn">${hasBuyPrice ? "Buy 1" : "Locked"}</button>
       `;
       // later going to add a thing where you can buy multiple at a time
       const buyActionBtn = card.querySelector("button");
-      if (playerWallet < crop.buyPrice) buyActionBtn.disabled = true; // Disable if poor
+      if (!hasBuyPrice || playerWallet < crop.buyPrice || !hasInventorySpace()) buyActionBtn.disabled = true;
       buyActionBtn.addEventListener("click", () => buySeedItem(crop));
       
     } else {
       // --- SELL TAB INTERFACE ---
-      const ownedCrops = playerInventory[`harvested${crop.id.charAt(0).toUpperCase() + crop.id.slice(1)}`] || 0;
+      const ownedCrops = getHarvestedCropCount(crop);
+      const hasSellPrice = Number.isFinite(crop.sellPrice);
       card.innerHTML = `
         <h3>Ripe ${crop.name.replace(" Seed", "")}</h3>
-        <p>Value: ${crop.sellPrice} 🪙</p>
+        <p>Value: ${hasSellPrice ? `${crop.sellPrice} 🪙` : "Unavailable"}</p>
         <p>In Bag: ${ownedCrops}</p>
-        <button class="shop-action-btn" style="background-color: #4CAF50;">Sell 1</button>
+        <button class="shop-action-btn" style="background-color: #4CAF50;">${hasSellPrice ? "Sell 1" : "Locked"}</button>
       `;
       
       const sellActionBtn = card.querySelector("button");
-      if (ownedCrops <= 0) sellActionBtn.disabled = true; // Disable if none owned
+      if (!hasSellPrice || ownedCrops <= 0) sellActionBtn.disabled = true; // Disable un-configured crops or empty inventory
       sellActionBtn.addEventListener("click", () => sellCropItem(crop));
     }
 
@@ -582,19 +883,29 @@ function updateShopUI() {
   });
 }
 
+function getHarvestedCropCount(crop) {
+  const cropKey = `harvested${crop.id.charAt(0).toUpperCase() + crop.id.slice(1)}`;
+  return playerInventory[cropKey] || 0;
+}
+
 function buySeedItem(crop) {
-  if (playerWallet >= crop.buyPrice) {
+  if (Number.isFinite(crop.buyPrice) && playerWallet >= crop.buyPrice && hasInventorySpace()) {
     playerWallet -= crop.buyPrice;
-    playerInventory[`${crop.id}Seeds`]++;
+    const seedKey = `${crop.id}Seeds`;
+    playerInventory[seedKey] = (playerInventory[seedKey] || 0) + 1;
+    updateHUD();
+    renderInventory();
     updateShopUI();
   }
 }
 
 function sellCropItem(crop) {
   const cropKey = `harvested${crop.id.charAt(0).toUpperCase() + crop.id.slice(1)}`;
-  if (playerInventory[cropKey] > 0) {
+  if (Number.isFinite(crop.sellPrice) && playerInventory[cropKey] > 0) {
     playerInventory[cropKey]--;
     playerWallet += crop.sellPrice;
+    updateHUD();
+    renderInventory();
     updateShopUI();
   }
 }
