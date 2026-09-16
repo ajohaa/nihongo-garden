@@ -19,7 +19,7 @@ body {
   background-attachment: fixed;
   padding: 0;
   position: relative;
-  width: 800px;
+  width: 80%;
   min-height: 100vh;
   border-radius: 12px;
   overflow: hidden; /* Stops character or graphics from sliding out of the box */
@@ -71,6 +71,30 @@ body {
   transform-origin: bottom center;
   object-fit: contain;
   image-rendering: pixelated;
+}
+
+.harvest-exp-popup {
+  position: absolute;
+  z-index: 60;
+  color: #fff59d;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: 1px 1px 0 #3d542b, -1px -1px 0 #3d542b;
+  transform: translate(-50%, -50%);
+  animation: harvest-exp-float 700ms ease-out forwards;
+}
+
+@keyframes harvest-exp-float {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 24px));
+  }
 }
 
 .plot-interaction-btn {
@@ -267,18 +291,17 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   color: #333;
   font-size: 14px;
   font-weight: bold;
 }
 
 .unlocked-crop img {
-  width: 48px;
-  height: 48px;
+  width: 64px;
+  height: 64px;
   object-fit: contain;
   image-rendering: pixelated;
-  scale: 2;
 }
 
 #level-up-close-btn {
@@ -371,6 +394,11 @@ body {
 }
 
 @media (max-width: 520px) {
+  #main-scene {
+    width: 100%;
+    border-radius: 0;
+  }
+
   .kana-reference-row {
     grid-template-columns: repeat(5, minmax(52px, 1fr));
     gap: 6px;

@@ -457,7 +457,7 @@ function showLevelUpPopup() {
       const cropElement = document.createElement("div");
       cropElement.className = "unlocked-crop";
       cropElement.innerHTML = `
-        <img src="crops, seeds, signs, items/${crop.id}1.png" alt="${crop.name}">
+        <img src="crops, seeds, signs, items/${crop.id}-item.png" alt="${crop.name}">
         <span>${crop.name}</span>
       `;
       unlockedCropsContainer.appendChild(cropElement);
@@ -709,13 +709,30 @@ function harvestCrop(plotId, slotIndex) {
     || !hasInventorySpace()) return false;
 
   const plot = gardenPlots.find(currentPlot => currentPlot.id === plotId);
+  const plantWrapper = document.querySelector(`.plant-wrapper[data-plot-id="${plotId}"][data-slot-index="${slotIndex}"]`);
   const harvestedKey = `harvested${plant.cropType.charAt(0).toUpperCase()}${plant.cropType.slice(1)}`;
   plot.plants[slotIndex] = null;
   playerInventory[harvestedKey] = (playerInventory[harvestedKey] || 0) + 1;
+  gainEXP(1);
+  showHarvestEXP(plantWrapper);
   nearbyInteraction = null;
   renderGardenPlots();
   renderInventory();
   return true;
+}
+
+function showHarvestEXP(plantWrapper) {
+  if (!plantWrapper) return;
+
+  const sceneRect = mainScene.getBoundingClientRect();
+  const plantRect = plantWrapper.getBoundingClientRect();
+  const expPopup = document.createElement("span");
+  expPopup.className = "harvest-exp-popup";
+  expPopup.textContent = "+1⚡";
+  expPopup.style.left = `${plantRect.left - sceneRect.left + plantRect.width / 2}px`;
+  expPopup.style.top = `${plantRect.top - sceneRect.top + plantRect.height / 2}px`;
+  mainScene.appendChild(expPopup);
+  expPopup.addEventListener("animationend", () => expPopup.remove(), { once: true });
 }
 
 function handleNearbyInteraction(plotId, slotIndex) {
