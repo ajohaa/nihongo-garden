@@ -303,7 +303,7 @@ function openQuizModal() {
 function closeQuizModal() {
   // If player clicks close button while timed mode interval is actively processing...
   if (currentMode === "timed" && timedCountdownInterval !== null && secondsRemaining > 0) {
-    const confirmExit = confirm("⚠️ Are you sure you want to exit early? You will forfeit all progress and gain 0 EXP for this session!");
+    const confirmExit = confirm("⚠️ Are you sure you want to exit early? You will not gain any EXP for this session!");
     
     if (!confirmExit) {
       return; // Break execution cycle out, returning them safely back into the active quiz game
@@ -544,8 +544,8 @@ function checkKanaAnswer(selectedButton, chosenText) {
       timedSessionCorrectCount++; 
     } else {
       totalCorrectAnswers++;
+      progressGardenGrowth();
     }
-    progressGardenGrowth();
     feedbackText.textContent = "✨ Great job! Your answer is correct.";
     feedbackText.className = "correct-msg";
     selectedButton.style.borderColor = "#2e7d32";
