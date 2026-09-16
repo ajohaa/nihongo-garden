@@ -321,6 +321,7 @@ function closeQuizModal() {
   modalTimerBlock.classList.add("hidden"); // Securely clear internal layout elements
   
   isGamePaused = false; 
+  requestAnimationFrame(updateInteractionPrompt);
   updateHUD();
 }
 
