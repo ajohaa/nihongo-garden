@@ -19,7 +19,7 @@ body {
   background-attachment: fixed;
   padding: 0;
   position: relative;
-  width: 80%;
+  width: 70%;
   min-height: 100vh;
   border-radius: 12px;
   overflow: hidden; /* Stops character or graphics from sliding out of the box */
