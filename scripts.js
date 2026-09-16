@@ -939,6 +939,7 @@ shopOpenBtn.addEventListener("click", () => {
 shopCloseBtn.addEventListener("click", () => {
   shopOverlay.classList.add("hidden");
   isGamePaused = false; // Restore movement capabilities
+  updateInteractionPrompt();
 });
 
 tabBuyBtn.addEventListener("click", () => { switchTab("buy"); });
@@ -1083,6 +1084,7 @@ function sellCropItem(crop) {
     playerWallet += crop.sellPrice;
     updateHUD();
     renderInventory();
+    updateInteractionPrompt();
     updateShopUI();
   }
 }
