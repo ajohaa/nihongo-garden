@@ -56,11 +56,8 @@ const playerAnimations = {
 
 // Player physics & rendering state
 const mainScene = document.getElementById("main-scene");
-const playerWidth = 50;
-const playerHeight = 50;
-const playerScale = 1.6;
-const playerVisualInsetX = (playerWidth * playerScale - playerWidth) / 2;
-const playerVisualInsetY = (playerHeight * playerScale - playerHeight) / 2;
+const playerWidth = 35;
+const playerHeight = 35;
 let player = {
   x: (mainScene.clientWidth - playerWidth) / 2,
   y: (mainScene.clientHeight - playerHeight) / 2,
@@ -70,6 +67,31 @@ let lastAngle = '180';
 let animationFrame = 0;
 let animationTimer = 0;
 const ANIMATION_SPEED = 4; // Higher = slower switching (e.g., switch frame every 10 ticks)
+
+function isPlayerPositionBlocked(x, y) {
+  const sceneRect = mainScene.getBoundingClientRect();
+  const playerRect = {
+    left: x,
+    top: y,
+    right: x + playerWidth,
+    bottom: y + playerHeight
+  };
+
+  return Array.from(document.querySelectorAll(".garden-plot")).some(plotElement => {
+    const plotRect = plotElement.getBoundingClientRect();
+    const plotBounds = {
+      left: plotRect.left - sceneRect.left,
+      top: plotRect.top - sceneRect.top,
+      right: plotRect.right - sceneRect.left,
+      bottom: plotRect.bottom - sceneRect.top
+    };
+
+    return playerRect.left < plotBounds.right
+      && playerRect.right > plotBounds.left
+      && playerRect.top < plotBounds.bottom
+      && playerRect.bottom > plotBounds.top;
+  });
+}
 
 function updateMovement() {
     if (isGamePaused) {
@@ -92,9 +114,11 @@ function updateMovement() {
         dy *= 0.7071;
     }
 
-    // Apply movement
-    player.x += dx * player.speed;
-    player.y += dy * player.speed;
+    // Resolve each axis independently so the player can slide along plot edges.
+    const nextX = player.x + dx * player.speed;
+    const nextY = player.y + dy * player.speed;
+    if (!isPlayerPositionBlocked(nextX, player.y)) player.x = nextX;
+    if (!isPlayerPositionBlocked(player.x, nextY)) player.y = nextY;
 
     let isMoving = (dx !== 0 || dy !== 0);
     let lookupAngle = '180';
@@ -142,11 +166,11 @@ function updateMovement() {
             characterImg.src = player.currentSpriteImg;
         }
 
-      // Keep the scaled player fully inside the game scene.
-      const minimumPlayerX = playerVisualInsetX;
-      const maximumPlayerX = mainScene.clientWidth - playerWidth - playerVisualInsetX;
-      const minimumPlayerY = playerVisualInsetY;
-      const maximumPlayerY = mainScene.clientHeight - playerHeight - playerVisualInsetY;
+      // Keep the player fully inside the game scene.
+      const minimumPlayerX = 0;
+      const maximumPlayerX = mainScene.clientWidth - playerWidth;
+      const minimumPlayerY = 0;
+      const maximumPlayerY = mainScene.clientHeight - playerHeight;
 
       if (player.x < minimumPlayerX) player.x = minimumPlayerX;
       if (player.x > maximumPlayerX) {

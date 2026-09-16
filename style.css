@@ -122,21 +122,23 @@ body {
   position: absolute;
   top: 0;
   left: 0;
-  scale: 1.6;
   z-index: 10; /* Ensures the player is above the background but below UI elements */
 
   /* Use Flexbox to anchor the feet to the bottom */
   display: flex;
   align-items: flex-end; /* Pushes the character's feet to the ground baseline */
   justify-content: center;
-  width: 50px;
-  height: 50px;
+  width: 35px;
+  height: 35px;
 }
 
 #player img {
   width: auto;
   height: auto;
   display: block;
+  scale: 1.6;
+  transform-origin: bottom center;
+  image-rendering: pixelated;
 }
 #top-bar {
   position: absolute;
