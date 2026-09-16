@@ -881,6 +881,9 @@ function renderInventory() {
   const ownedItems = getInventoryItems();
 
   for (let slotIndex = 0; slotIndex < inventoryCapacity; slotIndex++) {
+    const inventoryItem = document.createElement("div");
+    inventoryItem.className = "inventory-item";
+
     const slot = document.createElement("div");
     slot.className = "inventory-slot";
 
@@ -895,7 +898,7 @@ function renderInventory() {
       const quantity = document.createElement("span");
       quantity.className = "inventory-quantity";
       quantity.textContent = item.count;
-      slot.appendChild(quantity);
+      inventoryItem.appendChild(quantity);
 
       if (!plantingTarget && item.kind === "seed") {
         slot.classList.add("planting-choice");
@@ -909,7 +912,8 @@ function renderInventory() {
       }
     }
 
-    inventorySlots.appendChild(slot);
+    inventoryItem.prepend(slot);
+    inventorySlots.appendChild(inventoryItem);
   }
 }
 

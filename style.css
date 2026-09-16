@@ -14,6 +14,7 @@ body {
 
 #main-scene {
   background-image: url("Grass.png");
+  image-rendering: pixelated;
   background-position: center center;
   background-size: cover;
   background-attachment: fixed;
@@ -41,6 +42,7 @@ body {
 .plot-slot {
   display: flex;
   justify-content: center;
+  image-rendering: pixelated;
 }
 
 .garden-plot {
@@ -393,7 +395,7 @@ body {
   font-weight: bold;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1000px) {
   #main-scene {
     width: 100%;
     border-radius: 0;
@@ -560,10 +562,18 @@ body {
   gap: 8px;
 }
 
+.inventory-item {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+}
+
 .inventory-slot {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
   aspect-ratio: 1;
   min-width: 0;
   background-color: #eceff1;
@@ -579,9 +589,7 @@ body {
 }
 
 .inventory-quantity {
-  position: absolute;
-  right: 4px;
-  bottom: 2px;
+  min-height: 16px;
   color: #263238;
   font-size: 12px;
   font-weight: bold;
