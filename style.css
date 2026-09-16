@@ -393,7 +393,7 @@ body {
   font-weight: bold;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 768px) {
   #main-scene {
     width: 100%;
     border-radius: 0;
