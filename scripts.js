@@ -627,6 +627,7 @@ function createTierCrop({ id, name, buyPrice, unlockLevel }) {
   const tier = Math.ceil(unlockLevel / 5);
   const questionsPerTier = 3;
   const requiredQuestions = tier * questionsPerTier;
+  const maxStages = 4; // Seed + 3 growth stages before harvest
 
   return {
     id,
@@ -634,7 +635,7 @@ function createTierCrop({ id, name, buyPrice, unlockLevel }) {
     buyPrice,
     sellPrice: buyPrice * 2,
     requiredQuestions,
-    maxStages: requiredQuestions,
+    maxStages,
     unlockLevel
   };
 }
@@ -822,10 +823,10 @@ function progressGardenGrowth() {
   gardenPlots.forEach(plot => {
     plot.plants.forEach(plant => {
       const cropInfo = plant && seedCatalog[plant.cropType];
-      if (!cropInfo || !Number.isFinite(cropInfo.requiredQuestions) || plant.currentStage >= cropInfo.maxStages) return;
+      if (!cropInfo || !Number.isFinite(cropInfo.requiredQuestions) || plant.currentStage >= cropInfo.maxStages - 1) return;
 
       plant.questionsAnswered++;
-      const questionsPerStage = cropInfo.requiredQuestions / cropInfo.maxStages;
+      const questionsPerStage = cropInfo.requiredQuestions / (cropInfo.maxStages - 1);
 
       if (plant.questionsAnswered >= (plant.currentStage + 1) * questionsPerStage) {
         plant.currentStage++;
@@ -857,24 +858,24 @@ const seedCatalog = {
 
   // Tier 3: Levels 11-15 | 9 questions each | +3 EXP harvest
   leek: createTierCrop({ id: "leek", name: "Leek", buyPrice: 15, unlockLevel: 11 }),
-  broccoli: createTierCrop({ id: "broccoli", name: "Broccoli", buyPrice: 15, unlockLevel: 12 }),
+  broccoli: createTierCrop({ id: "broccoli", name: "Broccoli", buyPrice: 16, unlockLevel: 12 }),
   redonion: createTierCrop({ id: "redonion", name: "Red Onion", buyPrice: 17, unlockLevel: 13 }),
   garlic: createTierCrop({ id: "garlic", name: "Garlic", buyPrice: 18, unlockLevel: 14 }),
   strawberry: createTierCrop({ id: "strawberry", name: "Strawberry", buyPrice: 19, unlockLevel: 15 }),
 
   // Tier 4: Levels 16-20 | 12 questions each | +4 EXP harvest
-  cauliflower: createTierCrop({ id: "cauliflower", name: "Cauliflower", buyPrice: 16, unlockLevel: 16 }),
-  beetroot: createTierCrop({ id: "beetroot", name: "Beetroot", buyPrice: 17, unlockLevel: 17 }),
-  redpepper: createTierCrop({ id: "redpepper", name: "Red Pepper", buyPrice: 18, unlockLevel: 18 }),
-  asparagus: createTierCrop({ id: "asparagus", name: "Asparagus", buyPrice: 19, unlockLevel: 19 }),
-  pumpkin: createTierCrop({ id: "pumpkin", name: "Pumpkin", buyPrice: 20, unlockLevel: 20 }),
+  cauliflower: createTierCrop({ id: "cauliflower", name: "Cauliflower", buyPrice: 20, unlockLevel: 16 }),
+  beetroot: createTierCrop({ id: "beetroot", name: "Beetroot", buyPrice: 21, unlockLevel: 17 }),
+  redpepper: createTierCrop({ id: "redpepper", name: "Red Pepper", buyPrice: 22, unlockLevel: 18 }),
+  asparagus: createTierCrop({ id: "asparagus", name: "Asparagus", buyPrice: 23, unlockLevel: 19 }),
+  pumpkin: createTierCrop({ id: "pumpkin", name: "Pumpkin", buyPrice: 24, unlockLevel: 20 }),
 
   // Tier 5: Levels 21-25 | 15 questions each | +5 EXP harvest
-  redcabbage: createTierCrop({ id: "redcabbage", name: "Red Cabbage", buyPrice: 21, unlockLevel: 21 }),
-  zucchini: createTierCrop({ id: "zucchini", name: "Zucchini", buyPrice: 22, unlockLevel: 22 }),
-  raspberry: createTierCrop({ id: "raspberry", name: "Raspberry", buyPrice: 22, unlockLevel: 23 }),
-  chili: createTierCrop({ id: "chili", name: "Chili", buyPrice: 24, unlockLevel: 24 }),
-  sunflower: createTierCrop({ id: "sunflower", name: "Sunflower", buyPrice: 25, unlockLevel: 25 })
+  redcabbage: createTierCrop({ id: "redcabbage", name: "Red Cabbage", buyPrice: 25, unlockLevel: 21 }),
+  zucchini: createTierCrop({ id: "zucchini", name: "Zucchini", buyPrice: 26, unlockLevel: 22 }),
+  raspberry: createTierCrop({ id: "raspberry", name: "Raspberry", buyPrice: 27, unlockLevel: 23 }),
+  chili: createTierCrop({ id: "chili", name: "Chili", buyPrice: 24, unlockLevel: 28 }),
+  sunflower: createTierCrop({ id: "sunflower", name: "Sunflower", buyPrice: 29, unlockLevel: 25 })
 };
 
 let playerWallet = 10; 
