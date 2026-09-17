@@ -732,7 +732,7 @@ function plantCrop(plotId, slotIndex, cropType, image = getStageImage(cropType, 
 
 function harvestCrop(plotId, slotIndex) {
   const plant = getPlotPlant(plotId, slotIndex);
-  if (!plant || !seedCatalog[plant.cropType] || plant.currentStage < seedCatalog[plant.cropType].maxStages
+  if (!plant || !seedCatalog[plant.cropType] || plant.currentStage < seedCatalog[plant.cropType].maxStages - 1
     || !hasInventorySpace()) return false;
 
   const cropInfo = seedCatalog[plant.cropType];
@@ -793,7 +793,7 @@ function updateInteractionPrompt() {
     const distance = Math.hypot(playerCenter.x - slotCenter.x, playerCenter.y - slotCenter.y);
     let type = null;
 
-    if (plant && seedCatalog[plant.cropType] && plant.currentStage >= seedCatalog[plant.cropType].maxStages
+    if (plant && seedCatalog[plant.cropType] && plant.currentStage >= seedCatalog[plant.cropType].maxStages - 1
       && hasInventorySpace() && distance <= closestDistance) type = "harvest";
     if (!type) return;
 
