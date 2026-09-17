@@ -613,9 +613,35 @@ let gardenPlots = [createGardenPlot(1)];
 gardenPlots[0].plants[0] = {
   cropType: "wheat",
   image: "crops, seeds, signs, items/wheat4.png",
-  questionsAnswered: 4,
-  currentStage: 4
+  questionsAnswered: 3,
+  currentStage: 3
 };
+
+function getCropTier(cropOrId) {
+  const crop = typeof cropOrId === "string" ? seedCatalog[cropOrId] : cropOrId;
+  if (!crop || !Number.isFinite(crop.unlockLevel)) return 1;
+  return Math.max(1, Math.ceil(crop.unlockLevel / 5));
+}
+
+function createTierCrop({ id, name, buyPrice, unlockLevel }) {
+  const tier = Math.ceil(unlockLevel / 5);
+  const questionsPerTier = 3;
+  const requiredQuestions = tier * questionsPerTier;
+
+  return {
+    id,
+    name,
+    buyPrice,
+    sellPrice: buyPrice * 2,
+    requiredQuestions,
+    maxStages: requiredQuestions,
+    unlockLevel
+  };
+}
+
+function getCropHarvestReward(cropOrId) {
+  return getCropTier(cropOrId);
+}
 
 function getStageImage(cropType, stage) {
   return `crops, seeds, signs, items/${cropType}${Math.max(1, Math.min(stage, 4))}.png`;
@@ -708,27 +734,28 @@ function harvestCrop(plotId, slotIndex) {
   if (!plant || !seedCatalog[plant.cropType] || plant.currentStage < seedCatalog[plant.cropType].maxStages
     || !hasInventorySpace()) return false;
 
+  const cropInfo = seedCatalog[plant.cropType];
   const plot = gardenPlots.find(currentPlot => currentPlot.id === plotId);
   const plantWrapper = document.querySelector(`.plant-wrapper[data-plot-id="${plotId}"][data-slot-index="${slotIndex}"]`);
   const harvestedKey = `harvested${plant.cropType.charAt(0).toUpperCase()}${plant.cropType.slice(1)}`;
   plot.plants[slotIndex] = null;
   playerInventory[harvestedKey] = (playerInventory[harvestedKey] || 0) + 1;
-  gainEXP(1);
-  showHarvestEXP(plantWrapper);
+  gainEXP(getCropHarvestReward(cropInfo));
+  showHarvestEXP(plantWrapper, getCropHarvestReward(cropInfo));
   nearbyInteraction = null;
   renderGardenPlots();
   renderInventory();
   return true;
 }
 
-function showHarvestEXP(plantWrapper) {
+function showHarvestEXP(plantWrapper, expValue = 1) {
   if (!plantWrapper) return;
 
   const sceneRect = mainScene.getBoundingClientRect();
   const plantRect = plantWrapper.getBoundingClientRect();
   const expPopup = document.createElement("span");
   expPopup.className = "harvest-exp-popup";
-  expPopup.textContent = "+1⚡";
+  expPopup.textContent = `+${expValue}⚡`;
   expPopup.style.left = `${plantRect.left - sceneRect.left + plantRect.width / 2}px`;
   expPopup.style.top = `${plantRect.top - sceneRect.top + plantRect.height / 2}px`;
   mainScene.appendChild(expPopup);
@@ -814,31 +841,40 @@ function progressGardenGrowth() {
 // shop system
 
 const seedCatalog = {
-  asparagus: { id: "asparagus", name: "Asparagus", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4, unlockLevel: null },
-  beetroot: { id: "beetroot", name: "Beetroot", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  blackberry: { id: "blackberry", name: "Blackberry", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  broccoli: { id: "broccoli", name: "Broccoli", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  carrot: { id: "carrot", name: "Carrot", buyPrice: 8, sellPrice: 16, requiredQuestions: 4, maxStages: 4, unlockLevel: 4 },
-  cauliflower: { id: "cauliflower", name: "Cauliflower", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  celery: { id: "celery", name: "Celery", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  chili: { id: "chili", name: "Chili", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  corn: { id: "corn", name: "Corn", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  garlic: { id: "garlic", name: "Garlic", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  greenbeans: { id: "greenbeans", name: "Green Beans", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  leek: { id: "leek", name: "Leek", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  lettuce: { id: "lettuce", name: "Lettuce", buyPrice: 9, sellPrice: 18, requiredQuestions: 4, maxStages: 4, unlockLevel: 5 },
-  potato: { id: "potato", name: "Potato", buyPrice: 6, sellPrice: 12, requiredQuestions: 4, maxStages: 4, unlockLevel: 2 },
-  pumpkin: { id: "pumpkin", name: "Pumpkin", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  raspberry: { id: "raspberry", name: "Raspberry", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  redcabbage: { id: "redcabbage", name: "Red Cabbage", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  redonion: { id: "redonion", name: "Red Onion", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  redpepper: { id: "redpepper", name: "Red Pepper", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  strawberry: { id: "strawberry", name: "Strawberry", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  sunflower: { id: "sunflower", name: "Sunflower", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  tomato: { id: "tomato", name: "Tomato", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 },
-  turnip: { id: "turnip", name: "Turnip", buyPrice: 7, sellPrice: 14, requiredQuestions: 4, maxStages: 4, unlockLevel: 3 },
-  wheat: { id: "wheat", name: "Wheat", buyPrice: 5, sellPrice: 10, requiredQuestions: 4, maxStages: 4, unlockLevel: 1 },
-  zucchini: { id: "zucchini", name: "Zucchini", buyPrice: null, sellPrice: null, requiredQuestions: null, maxStages: 4 }
+  // Tier 1: Levels 1-5 | 3 questions each | +1 EXP harvest
+  wheat: createTierCrop({ id: "wheat", name: "Wheat", buyPrice: 5, unlockLevel: 1 }),
+  potato: createTierCrop({ id: "potato", name: "Potato", buyPrice: 6, unlockLevel: 2 }),
+  turnip: createTierCrop({ id: "turnip", name: "Turnip", buyPrice: 7, unlockLevel: 3 }),
+  carrot: createTierCrop({ id: "carrot", name: "Carrot", buyPrice: 8, unlockLevel: 4 }),
+  lettuce: createTierCrop({ id: "lettuce", name: "Lettuce", buyPrice: 9, unlockLevel: 5 }),
+
+  // Tier 2: Levels 6-10 | 6 questions each | +2 EXP harvest
+  tomato: createTierCrop({ id: "tomato", name: "Tomato", buyPrice: 10, unlockLevel: 6 }),
+  corn: createTierCrop({ id: "corn", name: "Corn", buyPrice: 11, unlockLevel: 7 }),
+  celery: createTierCrop({ id: "celery", name: "Celery", buyPrice: 12, unlockLevel: 8 }),
+  greenbeans: createTierCrop({ id: "greenbeans", name: "Green Beans", buyPrice: 13, unlockLevel: 9 }),
+  blackberry: createTierCrop({ id: "blackberry", name: "Blackberry", buyPrice: 14, unlockLevel: 10 }),
+
+  // Tier 3: Levels 11-15 | 9 questions each | +3 EXP harvest
+  leek: createTierCrop({ id: "leek", name: "Leek", buyPrice: 15, unlockLevel: 11 }),
+  broccoli: createTierCrop({ id: "broccoli", name: "Broccoli", buyPrice: 15, unlockLevel: 12 }),
+  redonion: createTierCrop({ id: "redonion", name: "Red Onion", buyPrice: 17, unlockLevel: 13 }),
+  garlic: createTierCrop({ id: "garlic", name: "Garlic", buyPrice: 18, unlockLevel: 14 }),
+  strawberry: createTierCrop({ id: "strawberry", name: "Strawberry", buyPrice: 19, unlockLevel: 15 }),
+
+  // Tier 4: Levels 16-20 | 12 questions each | +4 EXP harvest
+  cauliflower: createTierCrop({ id: "cauliflower", name: "Cauliflower", buyPrice: 16, unlockLevel: 16 }),
+  beetroot: createTierCrop({ id: "beetroot", name: "Beetroot", buyPrice: 17, unlockLevel: 17 }),
+  redpepper: createTierCrop({ id: "redpepper", name: "Red Pepper", buyPrice: 18, unlockLevel: 18 }),
+  asparagus: createTierCrop({ id: "asparagus", name: "Asparagus", buyPrice: 19, unlockLevel: 19 }),
+  pumpkin: createTierCrop({ id: "pumpkin", name: "Pumpkin", buyPrice: 20, unlockLevel: 20 }),
+
+  // Tier 5: Levels 21-25 | 15 questions each | +5 EXP harvest
+  redcabbage: createTierCrop({ id: "redcabbage", name: "Red Cabbage", buyPrice: 21, unlockLevel: 21 }),
+  zucchini: createTierCrop({ id: "zucchini", name: "Zucchini", buyPrice: 22, unlockLevel: 22 }),
+  raspberry: createTierCrop({ id: "raspberry", name: "Raspberry", buyPrice: 22, unlockLevel: 23 }),
+  chili: createTierCrop({ id: "chili", name: "Chili", buyPrice: 24, unlockLevel: 24 }),
+  sunflower: createTierCrop({ id: "sunflower", name: "Sunflower", buyPrice: 25, unlockLevel: 25 })
 };
 
 let playerWallet = 10; 
