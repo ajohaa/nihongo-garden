@@ -647,7 +647,7 @@ function createTierCrop({ id, name, buyPrice, unlockLevel }) {
     id,
     name,
     buyPrice,
-    sellPrice: buyPrice * 2,
+    sellPrice: buyPrice + (tier * 2),
     requiredQuestions,
     maxStages,
     unlockLevel
@@ -888,7 +888,7 @@ const seedCatalog = {
   redcabbage: createTierCrop({ id: "redcabbage", name: "Red Cabbage", buyPrice: 25, unlockLevel: 21 }),
   zucchini: createTierCrop({ id: "zucchini", name: "Zucchini", buyPrice: 26, unlockLevel: 22 }),
   raspberry: createTierCrop({ id: "raspberry", name: "Raspberry", buyPrice: 27, unlockLevel: 23 }),
-  chili: createTierCrop({ id: "chili", name: "Chili", buyPrice: 24, unlockLevel: 28 }),
+  chili: createTierCrop({ id: "chili", name: "Chili", buyPrice: 28, unlockLevel: 24 }),
   sunflower: createTierCrop({ id: "sunflower", name: "Sunflower", buyPrice: 29, unlockLevel: 25 })
 };
 
