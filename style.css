@@ -13,17 +13,28 @@ body {
 }
 
 #main-scene {
-  background-image: url("Grass.png");
-  image-rendering: pixelated;
-  background-position: center center;
-  background-size: cover;
-  background-attachment: fixed;
+  background-color: #85bc8c;
   padding: 0;
   position: relative;
   width: 70%;
-  min-height: 100vh;
+  height: 100vh;
   border-radius: 12px;
   overflow: hidden; /* Stops character or graphics from sliding out of the box */
+}
+
+#world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2400px;
+  height: 1600px;
+  background-image: url("Grass.png");
+  background-repeat: repeat;
+  background-size: 1280px 1280px;
+  image-rendering: pixelated;
+  transform: translate(0, 0);
+  transform-origin: top left;
+  will-change: transform;
 }
 
 #plots-container {

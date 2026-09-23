@@ -56,20 +56,22 @@ const playerAnimations = {
 
 // Player physics & rendering state
 const mainScene = document.getElementById("main-scene");
+const world = document.getElementById("world");
 const playerWidth = 35;
 const playerHeight = 35;
 let player = {
-  x: (mainScene.clientWidth - playerWidth) / 2,
-  y: (mainScene.clientHeight - playerHeight) / 2,
+  x: (world.clientWidth - playerWidth) / 2,
+  y: (world.clientHeight - playerHeight) / 2,
   speed: 6
 };
+let camera = { x: 0, y: 0 };
 let lastAngle = '180';
 let animationFrame = 0;
 let animationTimer = 0;
 const ANIMATION_SPEED = 4; // Higher = slower switching (e.g., switch frame every 10 ticks)
 
 function isPlayerPositionBlocked(x, y) {
-  const sceneRect = mainScene.getBoundingClientRect();
+  const worldRect = world.getBoundingClientRect();
   const playerRect = {
     left: x,
     top: y,
@@ -80,10 +82,10 @@ function isPlayerPositionBlocked(x, y) {
   return Array.from(document.querySelectorAll(".garden-plot")).some(plotElement => {
     const plotRect = plotElement.getBoundingClientRect();
     const plotBounds = {
-      left: plotRect.left - sceneRect.left,
-      top: plotRect.top - sceneRect.top,
-      right: plotRect.right - sceneRect.left,
-      bottom: plotRect.bottom - sceneRect.top
+      left: plotRect.left - worldRect.left,
+      top: plotRect.top - worldRect.top,
+      right: plotRect.right - worldRect.left,
+      bottom: plotRect.bottom - worldRect.top
     };
 
     return playerRect.left < plotBounds.right
@@ -91,6 +93,17 @@ function isPlayerPositionBlocked(x, y) {
       && playerRect.top < plotBounds.bottom
       && playerRect.bottom > plotBounds.top;
   });
+}
+
+function updateCamera() {
+  const maximumCameraX = Math.min(0, mainScene.clientWidth - world.clientWidth);
+  const maximumCameraY = Math.min(0, mainScene.clientHeight - world.clientHeight);
+  const targetX = mainScene.clientWidth / 2 - (player.x + playerWidth / 2);
+  const targetY = mainScene.clientHeight / 2 - (player.y + playerHeight / 2);
+
+  camera.x = Math.max(maximumCameraX, Math.min(0, targetX));
+  camera.y = Math.max(maximumCameraY, Math.min(0, targetY));
+  world.style.transform = `translate(${camera.x}px, ${camera.y}px)`;
 }
 
 function updateMovement() {
@@ -166,11 +179,11 @@ function updateMovement() {
             characterImg.src = player.currentSpriteImg;
         }
 
-      // Keep the player fully inside the game scene.
+      // Keep the player fully inside the world.
       const minimumPlayerX = 0;
-      const maximumPlayerX = mainScene.clientWidth - playerWidth;
+      const maximumPlayerX = world.clientWidth - playerWidth;
       const minimumPlayerY = 0;
-      const maximumPlayerY = mainScene.clientHeight - playerHeight;
+      const maximumPlayerY = world.clientHeight - playerHeight;
 
       if (player.x < minimumPlayerX) player.x = minimumPlayerX;
       if (player.x > maximumPlayerX) {
@@ -184,6 +197,7 @@ function updateMovement() {
 
       // Position the wrapper and handle the horizontal left-flip transform
       playerWrapper.style.transform = `translate(${player.x}px, ${player.y}px) scaleX(${shouldFlip ? -1 : 1})`;
+      updateCamera();
       updateInteractionPrompt();
     }
 
