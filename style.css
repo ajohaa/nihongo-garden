@@ -604,40 +604,50 @@ img {
 #action-buttons {
   position: absolute;
   top: 58px;
-  right: 20px;
+  right: 8px;
   z-index: 1000;
 }
 
 #shop-btn {
   position: static;
-  width: 100%;
-  padding: 12px 24px;
-  font-size: 20px;
-  background-color: #ff9800;
-  color: white;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: 0;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-#shop-btn:hover {
-  background-color: #e65100;
+#shop-btn img,
+#inventory-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  background: transparent;
+}
+
+#shop-btn:hover,
+#inventory-btn:hover {
+  background: transparent;
 }
 
 #inventory-btn {
   position: static;
-  width: 100%;
-  padding: 12px 24px;
-  font-size: 20px;
-  background-color: #607d8b;
-  color: white;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: 0;
   cursor: pointer;
-}
-
-#inventory-btn:hover {
-  background-color: #455a64;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #inventory-panel {

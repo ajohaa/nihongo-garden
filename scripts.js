@@ -62,13 +62,13 @@ const playerHeight = 35;
 let player = {
   x: (world.clientWidth - playerWidth) / 2,
   y: (world.clientHeight - playerHeight) / 2,
-  speed: 6
+  speed: 5
 };
 let camera = { x: 0, y: 0 };
 let lastAngle = '180';
 let animationFrame = 0;
 let animationTimer = 0;
-const ANIMATION_SPEED = 4; // Higher = slower switching (e.g., switch frame every 10 ticks)
+const ANIMATION_SPEED = 6; // Higher = slower switching (e.g., switch frame every 10 ticks)
 
 function isPlayerPositionBlocked(x, y) {
   const worldRect = world.getBoundingClientRect();
@@ -98,11 +98,32 @@ function isPlayerPositionBlocked(x, y) {
 function updateCamera() {
   const maximumCameraX = Math.min(0, mainScene.clientWidth - world.clientWidth);
   const maximumCameraY = Math.min(0, mainScene.clientHeight - world.clientHeight);
-  const targetX = mainScene.clientWidth / 2 - (player.x + playerWidth / 2);
-  const targetY = mainScene.clientHeight / 2 - (player.y + playerHeight / 2);
 
-  camera.x = Math.max(maximumCameraX, Math.min(0, targetX));
-  camera.y = Math.max(maximumCameraY, Math.min(0, targetY));
+  const deadZone = {
+    left: mainScene.clientWidth * 0.25,
+    right: mainScene.clientWidth * 0.75,
+    top: mainScene.clientHeight * 0.25,
+    bottom: mainScene.clientHeight * 0.75
+  };
+  const playerScreenLeft = player.x + camera.x;
+  const playerScreenTop = player.y + camera.y;
+  const playerScreenRight = playerScreenLeft + playerWidth;
+  const playerScreenBottom = playerScreenTop + playerHeight;
+
+  if (playerScreenLeft < deadZone.left) {
+    camera.x += deadZone.left - playerScreenLeft;
+  } else if (playerScreenRight > deadZone.right) {
+    camera.x -= playerScreenRight - deadZone.right;
+  }
+
+  if (playerScreenTop < deadZone.top) {
+    camera.y += deadZone.top - playerScreenTop;
+  } else if (playerScreenBottom > deadZone.bottom) {
+    camera.y -= playerScreenBottom - deadZone.bottom;
+  }
+
+  camera.x = Math.max(maximumCameraX, Math.min(0, camera.x));
+  camera.y = Math.max(maximumCameraY, Math.min(0, camera.y));
   world.style.transform = `translate(${camera.x}px, ${camera.y}px)`;
 }
 
