@@ -35,9 +35,12 @@
         <img src="idle180.png">
       </div>
     </div>
-    <div id="action-buttons" class="col-2 d-flex flex-column align-items-stretch">
+    <div id="action-buttons" class="d-flex flex-column align-items-stretch">
+      <button id="settings-btn" type="button" aria-label="Settings">
+        <img src="menu-icon.png" alt="menu icon">
+      </button>
       <button id="shop-btn" type="button" aria-label="Shop">
-        <img src="shop-icon.png" alt="Shop icon">
+        <img src="store-icon.png" alt="Store icon">
       </button>
       <button id="inventory-btn" type="button" aria-label="Inventory">
         <img src="bag-icon.png" alt="Inventory icon">
@@ -46,6 +49,19 @@
     <div id="inventory-panel" class="hidden" aria-label="Inventory">
       <div id="inventory-slots"></div>
     </div>
+
+    <div id="settings-panel" class="hidden" aria-label="Settings">
+      <h2>Settings</h2>
+      <div class="option-item">
+        <label for="volume-slider">Music:</label>
+        <input type="range" id="music-slider" min="0" max="100" value="50">
+      </div>
+      <div class="option-item">
+        <label for="volume-slider">SFX:</label>
+        <input type="range" id="sfx-slider" min="0" max="100" value="50">
+      </div>     
+      <button id="save-game-btn" type="button">Save Game</button> 
+      <button id="return-btn" type="button">Return to Title</button>
 
     <div id="shop-modal-overlay" class="hidden">
       <div id="shop-modal-box">
