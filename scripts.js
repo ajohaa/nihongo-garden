@@ -22,6 +22,31 @@ function isTextInput(target) {
     || target.isContentEditable;
 }
 
+const backgroundMusic = document.getElementById("background-music");
+const musicSlider = document.getElementById("music-slider");
+let musicStarted = false;
+
+backgroundMusic.volume = Number(musicSlider.value) / 100;
+
+function startBackgroundMusic() {
+  if (musicStarted) return;
+
+  backgroundMusic.play().then(() => {
+    musicStarted = true;
+    document.removeEventListener("pointerdown", startBackgroundMusic);
+    document.removeEventListener("keydown", startBackgroundMusic);
+  }).catch(() => {
+    // Playback will be retried on the next user interaction if the browser blocks it.
+  });
+}
+
+musicSlider.addEventListener("input", () => {
+  backgroundMusic.volume = Number(musicSlider.value) / 100;
+});
+
+document.addEventListener("pointerdown", startBackgroundMusic);
+document.addEventListener("keydown", startBackgroundMusic);
+
 window.addEventListener("keydown", (event) => {
   if (isTextInput(event.target)) return;
 
@@ -293,6 +318,10 @@ let timedSessionCorrectCount = 0;
 
 const openBtn = document.getElementById("practice-btn");
 const overlay = document.getElementById("quiz-modal-overlay");
+const settingsBtn = document.getElementById("settings-btn");
+const settingsPanel = document.getElementById("settings-panel");
+const closeSettingsBtn = document.getElementById("close-settings-btn");
+const saveGameBtn = document.getElementById("save-game-btn");
 const kanaReferenceBtn = document.getElementById("kana-reference-btn");
 const kanaReferenceOverlay = document.getElementById("kana-reference-overlay");
 const closeKanaReferenceBtn = document.getElementById("close-kana-reference-btn");
@@ -306,6 +335,16 @@ const feedbackText = document.getElementById("feedback-text");
 
 const modalTimerBlock = document.getElementById("modal-timer");
 const modalTimerText = document.getElementById("modal-timer-countdown");
+
+settingsBtn.addEventListener("click", () => {
+  settingsPanel.classList.remove("hidden");
+  isGamePaused = true;
+});
+
+closeSettingsBtn.addEventListener("click", () => {
+  settingsPanel.classList.add("hidden");
+  isGamePaused = false;
+});
 
 openBtn.addEventListener("click", openQuizModal);
 closeBtn.addEventListener("click", closeQuizModal);

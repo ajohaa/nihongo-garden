@@ -722,6 +722,67 @@ img {
   font-weight: bold;
 }
 
+#settings-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(90vw, 400px);
+  padding: 30px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  z-index: 2000;
+}
+
+#close-settings-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+#settings-panel h2 {
+  margin-top: 0;
+  color: #2e7d32;
+}
+
+#music-slider,
+#sfx-slider {
+  width: 100%;
+  margin-top: 8px;
+  margin-bottom: 20px;
+  padding: 6px;
+  border: 2px solid #eee;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+#save-game-btn {
+  margin-top: 20px;
+  padding: 10px 24px;
+  color: white;
+  background-color: #4caf50;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+#return-btn {
+  margin-top: 12px;
+  padding: 10px 24px;
+  color: white;
+  background-color: #2196f3;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
 #shop-modal-overlay {
   position: fixed;
   top: 0;

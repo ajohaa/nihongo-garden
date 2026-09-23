@@ -21,6 +21,7 @@
 </head>
 
 <body>
+  <audio id="background-music" src="background-music.mp3" loop preload="auto"></audio>
   <div id="main-scene">
     <div id="top-bar"> <!-- heads-up display -->
       <div class="hud-stat">🪙 <span id="hud-coins">10</span></div>
@@ -52,17 +53,18 @@
 
     <div id="settings-panel" class="hidden" aria-label="Settings">
       <h2>Settings</h2>
+      <button id="close-settings-btn" type="button" aria-label="Close Settings">&times;</button>
       <div class="option-item">
-        <label for="volume-slider">Music:</label>
+        <label for="music-slider">Music:</label>
         <input type="range" id="music-slider" min="0" max="100" value="50">
       </div>
       <div class="option-item">
-        <label for="volume-slider">SFX:</label>
+        <label for="sfx-slider">SFX:</label>
         <input type="range" id="sfx-slider" min="0" max="100" value="50">
       </div>     
       <button id="save-game-btn" type="button">Save Game</button> 
       <button id="return-btn" type="button">Return to Title</button>
-
+    </div>
     <div id="shop-modal-overlay" class="hidden">
       <div id="shop-modal-box">
         <button id="close-shop-btn">&times;</button>
