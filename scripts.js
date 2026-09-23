@@ -1094,7 +1094,7 @@ function updateShopUI() {
       const buyQuantity = buyQuantities[crop.id] || 1;
       const hasInsufficientFunds = hasBuyPrice && playerWallet < crop.buyPrice * buyQuantity;
       card.innerHTML = `
-      <img src="crops, seeds, signs, items/${crop.id}-seeds.png" alt="${crop.name} Seed" style="width: 80px; height: 80px; object-fit: contain;">
+      <img src="crops, seeds, signs, items/${crop.id}-seeds.png" alt="${crop.name} Seed" style="width: 80px; height: 80px; object-fit: contain; image-rendering: pixelated;">
         <h3>${crop.name} Seed</h3>
         <p>Price: ${hasBuyPrice ? `${crop.buyPrice} 🪙` : "Unavailable"}</p>
         <p>Owned: ${ownedSeeds}</p>
@@ -1130,7 +1130,7 @@ function updateShopUI() {
       const ownedCrops = getHarvestedCropCount(crop);
       const hasSellPrice = Number.isFinite(crop.sellPrice);
       card.innerHTML = `
-        <img src="crops, seeds, signs, items/${crop.id}-item.png" alt="${crop.name} Crop" style="width: 80px; height: 80px; object-fit: contain;">
+        <img src="crops, seeds, signs, items/${crop.id}-item.png" alt="${crop.name} Crop" style="width: 80px; height: 80px; object-fit: contain; image-rendering: pixelated;">
         <h3>${crop.name.replace(" Seed", "")}</h3>
         <p>Value: ${hasSellPrice ? `${crop.sellPrice} 🪙` : "Unavailable"}</p>
         <p>In Bag: ${ownedCrops}</p>

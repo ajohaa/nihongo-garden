@@ -12,6 +12,10 @@ body {
   font-style: normal;
 }
 
+img {
+  image-rendering: pixelated;
+}
+
 #main-scene {
   background-color: #85bc8c;
   padding: 0;
@@ -114,6 +118,7 @@ body {
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
+  image-rendering: pixelated;
 }
 
 .plant-wrapper img {
