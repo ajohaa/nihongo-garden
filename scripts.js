@@ -24,7 +24,9 @@ function isTextInput(target) {
 
 const backgroundMusic = document.getElementById("background-music");
 const musicSlider = document.getElementById("music-slider");
+const sfxSlider = document.getElementById("sfx-slider");
 let musicStarted = false;
+const sfxAudioMap = {};
 
 backgroundMusic.volume = Number(musicSlider.value) / 100;
 
@@ -40,12 +42,40 @@ function startBackgroundMusic() {
   });
 }
 
+function playSfx(name) {
+  if (!name) return;
+
+  let audio = sfxAudioMap[name];
+  if (!audio) {
+    audio = new Audio(`sfx/${name}.mp3`);
+    audio.volume = Number(sfxSlider.value) / 100;
+    sfxAudioMap[name] = audio;
+  }
+
+  audio.currentTime = 0;
+  audio.play().catch(() => {
+    // Some browsers block non-user-initiated playback; ignore silent failures.
+  });
+}
+
 musicSlider.addEventListener("input", () => {
   backgroundMusic.volume = Number(musicSlider.value) / 100;
 });
 
+sfxSlider.addEventListener("input", () => {
+  const volume = Number(sfxSlider.value) / 100;
+  Object.values(sfxAudioMap).forEach(audio => {
+    audio.volume = volume;
+  });
+});
+
 document.addEventListener("pointerdown", startBackgroundMusic);
 document.addEventListener("keydown", startBackgroundMusic);
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("button");
+  if (button) playSfx("buttonpress");
+});
+startBackgroundMusic();
 
 window.addEventListener("keydown", (event) => {
   if (isTextInput(event.target)) return;
@@ -469,6 +499,7 @@ function endTimedPracticeSession() {
   clearInterval(timedCountdownInterval);
   timedCountdownInterval = null;
   modalTimerBlock.classList.add("hidden"); 
+  playSfx("timed-mode-end");
 
   const expGained = timedSessionCorrectCount * 2; 
   
@@ -513,6 +544,8 @@ function gainEXP(amount) {
 }
 
 function showLevelUpPopup() {
+  playSfx("levelup");
+
   const levelUpOverlay = document.getElementById("level-up-overlay");
   const levelUpMessage = document.getElementById("level-up-message");
   const unlockedCropsContainer = document.getElementById("unlocked-crops-container");
@@ -614,6 +647,7 @@ function checkKanaAnswer(selectedButton, chosenText) {
   choiceButtons.forEach(btn => btn.disabled = true);
 
   if (chosenText === currentQuestion.correct) {
+    playSfx("correct");
     if (currentMode === "timed") {
       timedSessionCorrectCount++; 
     } else {
@@ -801,6 +835,7 @@ function plantCrop(plotId, slotIndex, cropType, image = getStageImage(cropType, 
   isGamePaused = false;
   renderGardenPlots();
   renderInventory();
+  playSfx("planting");
   return true;
 }
 
@@ -820,6 +855,7 @@ function harvestCrop(plotId, slotIndex) {
   nearbyInteraction = null;
   renderGardenPlots();
   renderInventory();
+  playSfx("harvesting");
   return true;
 }
 
@@ -1034,10 +1070,12 @@ function toggleInventory() {
     inventoryPanel.classList.add("hidden");
     isGamePaused = false;
     renderGardenPlots();
+    playSfx("open-close-inventory");
     return;
   }
 
   inventoryPanel.classList.toggle("hidden");
+  playSfx("open-close-inventory");
   if (!inventoryPanel.classList.contains("hidden")) {
     isGamePaused = true;
     renderInventory();
@@ -1215,6 +1253,7 @@ function buyNextGardenPlot() {
   updateHUD();
   renderGardenPlots();
   updateShopUI();
+  playSfx("buying");
 }
 
 function getHarvestedCropCount(crop) {
@@ -1234,6 +1273,7 @@ function buySeedItem(crop, quantity = 1) {
     updateHUD();
     renderInventory();
     updateShopUI();
+    playSfx("buying");
   }
 }
 
@@ -1246,5 +1286,6 @@ function sellCropItem(crop) {
     renderInventory();
     updateInteractionPrompt();
     updateShopUI();
+    playSfx("selling");
   }
 }
