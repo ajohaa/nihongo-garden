@@ -27,6 +27,16 @@ const musicSlider = document.getElementById("music-slider");
 const sfxSlider = document.getElementById("sfx-slider");
 let musicStarted = false;
 const sfxAudioMap = {};
+const questsToggle = document.querySelector(".quests-toggle");
+const questContent = document.getElementById("quest-content");
+
+questsToggle.addEventListener("click", () => {
+  const isOpen = questsToggle.getAttribute("aria-expanded") === "true";
+  questsToggle.setAttribute("aria-expanded", String(!isOpen));
+  questContent.classList.toggle("is-open", !isOpen);
+  questContent.style.maxHeight = isOpen ? "0px" : `${questContent.scrollHeight}px`;
+  questsToggle.textContent = isOpen ? "Quests v" : "Quests ^";
+});
 
 backgroundMusic.volume = Number(musicSlider.value) / 100;
 

@@ -959,3 +959,58 @@ img {
   color: #666;
   font-size: 20px;
 }
+
+/* Style the toggle button */
+.quests-toggle {
+  position: absolute;
+  top: 55px;
+  left: 20px;
+  background-color: #d28c41;
+  color: white;
+  cursor: pointer;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  text-align: left;
+  z-index: 1000;
+  transition: background-color 0.3s ease;
+}
+
+/* Collapsible container hidden by default */
+.collapsible-content {
+  position: absolute;
+  top: 108px;
+  left: 20px;
+  z-index: 999;
+  width: min(280px, calc(100% - 40px));
+  box-sizing: border-box;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+  background-color: #f9f9f9;
+  border-radius: 0 0 4px 4px;
+}
+
+.collapsible-content.is-open {
+  max-height: 500px;
+}
+
+/* Flexbox layout for horizontal cards */
+.cards-container {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  overflow-x: auto; /* Enables horizontal scrolling on smaller screens */
+}
+
+/* Individual card styling */
+.card {
+  flex: 1;
+  min-width: 220px;
+  background: white;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
