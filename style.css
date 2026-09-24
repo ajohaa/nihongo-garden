@@ -979,6 +979,7 @@ img {
 
 /* Collapsible container hidden by default */
 .collapsible-content {
+  border-radius: 10px;  
   position: absolute;
   top: 108px;
   left: 20px;
@@ -989,25 +990,24 @@ img {
   overflow: hidden;
   transition: max-height 0.3s ease-out;
   background-color: #f9f9f9;
-  border-radius: 0 0 4px 4px;
 }
 
 .collapsible-content.is-open {
   max-height: 500px;
 }
 
-/* Flexbox layout for horizontal cards */
-.cards-container {
+.quests-container {
+  border-radius: 10px;
   display: flex;
-  gap: 16px;
+  flex-direction: column;
+  gap: 10px;
   padding: 16px;
-  overflow-x: auto; /* Enables horizontal scrolling on smaller screens */
 }
 
 /* Individual card styling */
-.card {
-  flex: 1;
-  min-width: 220px;
+.quest-card {
+  width: 100%;
+  box-sizing: border-box;
   background: white;
   padding: 20px;
   border: 1px solid #ddd;
