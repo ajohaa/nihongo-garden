@@ -54,7 +54,6 @@ function playSfx(name) {
 
   audio.currentTime = 0;
   audio.play().catch(() => {
-    // Some browsers block non-user-initiated playback; ignore silent failures.
   });
 }
 
@@ -69,11 +68,21 @@ sfxSlider.addEventListener("input", () => {
   });
 });
 
+function regularButton(button) {
+  if (!button) return false;
+
+  if (button.id === "inventory-btn" || button.id === "shop-btn") return false;
+  if (button.closest(".shop-action-btn") || button.closest(".choice-btn") || button.closest(".quantity-btn")) return false;
+  if (button.closest("#inventory-btn") || button.closest("#shop-btn")) return false;
+
+  return true;
+}
+
 document.addEventListener("pointerdown", startBackgroundMusic);
 document.addEventListener("keydown", startBackgroundMusic);
 document.addEventListener("click", (event) => {
   const button = event.target.closest("button");
-  if (button) playSfx("buttonpress");
+  if (button && regularButton(button)) playSfx("buttonpress");
 });
 startBackgroundMusic();
 
@@ -218,8 +227,8 @@ function updateMovement() {
     // Determine the absolute facing angle vs the available right-side asset angle
     if (movement.up && movement.right)       { lastAngle = '45';  lookupAngle = '45';  shouldFlip = false; }
     else if (movement.up && movement.left)   { lastAngle = '315'; lookupAngle = '45';  shouldFlip = true;  }
-    else if (movement.down && movement.right) { lastAngle = '135'; lookupAngle = '135'; shouldFlip = false; }
-    else if (movement.down && movement.left)  { lastAngle = '225'; lookupAngle = '135'; shouldFlip = true;  }
+    else if (movement.down && movement.right){ lastAngle = '135'; lookupAngle = '135'; shouldFlip = false; }
+    else if (movement.down && movement.left) { lastAngle = '225'; lookupAngle = '135'; shouldFlip = true;  }
     else if (movement.up)                    { lastAngle = '0';   lookupAngle = '0';   shouldFlip = false; }
     else if (movement.down)                  { lastAngle = '180'; lookupAngle = '180'; shouldFlip = false; }
     else if (movement.right)                 { lastAngle = '90';  lookupAngle = '90';  shouldFlip = false; }
@@ -351,7 +360,7 @@ const overlay = document.getElementById("quiz-modal-overlay");
 const settingsBtn = document.getElementById("settings-btn");
 const settingsPanel = document.getElementById("settings-panel");
 const closeSettingsBtn = document.getElementById("close-settings-btn");
-const saveGameBtn = document.getElementById("save-game-btn");
+const creditsBtn = document.getElementById("credits-btn");
 const kanaReferenceBtn = document.getElementById("kana-reference-btn");
 const kanaReferenceOverlay = document.getElementById("kana-reference-overlay");
 const closeKanaReferenceBtn = document.getElementById("close-kana-reference-btn");
@@ -410,7 +419,7 @@ function closeQuizModal() {
     const confirmExit = confirm("⚠️ Are you sure you want to exit early? You will not gain any EXP for this session!");
     
     if (!confirmExit) {
-      return; // Break execution cycle out, returning them safely back into the active quiz game
+      return;
     }
   }
 
@@ -422,8 +431,7 @@ function closeQuizModal() {
 
   overlay.classList.add("hidden");
   feedbackText.classList.add("hidden");
-  modalTimerBlock.classList.add("hidden"); // Securely clear internal layout elements
-  
+  modalTimerBlock.classList.add("hidden"); 
   isGamePaused = false; 
   updateInteractionPrompt();
   updateHUD();
@@ -659,6 +667,7 @@ function checkKanaAnswer(selectedButton, chosenText) {
     selectedButton.style.borderColor = "#2e7d32";
     selectedButton.style.backgroundColor = "#e8f5e9";
   } else {
+    playSfx("incorrect");
     feedbackText.textContent = `❌ Not quite! The correct answer was "${currentQuestion.correct}".`;
     feedbackText.className = "wrong-msg";
     selectedButton.style.borderColor = "#c62828";
@@ -1289,3 +1298,44 @@ function sellCropItem(crop) {
     playSfx("selling");
   }
 }
+
+function saveGameState() {
+  const gameState = {
+    playerLevel,
+    currentEXP,
+    expNeededForLevelUp,
+    playerWallet,
+    playerInventory,
+    gardenPlots
+  };
+  localStorage.setItem("kanaGardenGameState", JSON.stringify(gameState));
+  console.log("Game state saved.");
+}
+
+function autosave() {
+  setInterval(saveGameState, 180000);
+}
+
+function loadGameState() {
+  const savedState = localStorage.getItem("kanaGardenGameState");
+  if (savedState) {
+    try {
+      const gameState = JSON.parse(savedState);
+      playerLevel = gameState.playerLevel || 1;
+      currentEXP = gameState.currentEXP || 0;
+      expNeededForLevelUp = gameState.expNeededForLevelUp || 10;
+      playerWallet = gameState.playerWallet || 10;
+      playerInventory = gameState.playerInventory || {};
+      gardenPlots = gameState.gardenPlots || [createGardenPlot(1)];
+      updateHUD();
+      renderGardenPlots();
+      renderInventory();
+      console.log("Game state loaded.");
+    } catch (error) {
+      console.error("Failed to load game state:", error);
+    }
+  }
+}
+
+window.addEventListener("beforeunload", saveGameState);
+window.addEventListener("load", loadGameState);
