@@ -128,7 +128,10 @@ let player = {
   y: (world.clientHeight - playerHeight) / 2,
   speed: 5
 };
-let camera = { x: 0, y: 0 };
+let camera = {
+  x: mainScene.clientWidth / 2 - (player.x + playerWidth / 2),
+  y: mainScene.clientHeight / 2 - (player.y + playerHeight / 2)
+};
 let lastAngle = '180';
 let animationFrame = 0;
 let animationTimer = 0;
