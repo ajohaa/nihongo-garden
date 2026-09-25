@@ -1,4 +1,6 @@
-// character movement
+// ============================================================
+// INPUT, AUDIO & GLOBAL SETUP
+// ============================================================
 
 // state tracker for 4 primary movement keys (arrow keys and WASD)
 const movement = {
@@ -8,7 +10,7 @@ const movement = {
     right: false
 };
 
-// Map physical keys to our movement directions
+// Map keys to movement directions
 const keyMap = {
     'ArrowUp': 'up', 'w': 'up', 'W': 'up',
     'ArrowDown': 'down', 's': 'down', 'S': 'down',
@@ -49,7 +51,7 @@ function startBackgroundMusic() {
     document.removeEventListener("pointerdown", startBackgroundMusic);
     document.removeEventListener("keydown", startBackgroundMusic);
   }).catch(() => {
-    // Playback will be retried on the next user interaction if the browser blocks it.
+    // playback will be retried on the next user interaction if the browser blocks it
   });
 }
 
@@ -131,7 +133,11 @@ const playerAnimations = {
     '135': ['walk135.1.png', 'walk135.2.png', 'walk135.3.png', 'walk135.4.png', 'walk135.5.png'], // down-right
 };
 
-// Player physics & rendering state
+// ============================================================
+// PLAYER & MOVEMENT
+// ============================================================
+
+// player physics & rendering state
 const mainScene = document.getElementById("main-scene");
 const world = document.getElementById("world");
 const playerWidth = 35;
@@ -148,7 +154,7 @@ let camera = {
 let lastAngle = '180';
 let animationFrame = 0;
 let animationTimer = 0;
-const ANIMATION_SPEED = 6; // Higher = slower switching (e.g., switch frame every 10 ticks)
+const ANIMATION_SPEED = 6; // higher = slower switching (e.g., switch frame every 10 ticks)
 
 function isPlayerPositionBlocked(x, y) {
   const worldRect = world.getBoundingClientRect();
@@ -215,20 +221,20 @@ function updateMovement() {
     let dx = 0;
     let dy = 0;
 
-    // Check mapped directions
+    // check mapped directions
     if (movement.left) dx = -1;
     if (movement.right) dx = 1;
     if (movement.up) dy = -1;
     if (movement.down) dy = 1;
 
-    // If moving diagonally, total speed increases by ~41% (Pythagorean theorem).
-    // We divide by Math.sqrt(2) to keep diagonal speed exactly the same as straight speed
+    // if moving diagonally, total speed increases by ~41% (pythagorean theorem)
+    // divide by Math.sqrt(2) to keep diagonal speed exactly the same as straight speed
     if (dx !== 0 && dy !== 0) {
         dx *= 0.7071;
         dy *= 0.7071;
     }
 
-    // Resolve each axis independently so the player can slide along plot edges.
+    // resolve each axis independently so the player can slide along plot edges
     const nextX = player.x + dx * player.speed;
     const nextY = player.y + dy * player.speed;
     if (!isPlayerPositionBlocked(nextX, player.y)) player.x = nextX;
@@ -240,7 +246,7 @@ function updateMovement() {
     let currentSpriteImg = '';
 
     if (isMoving) {
-    // Determine the absolute facing angle vs the available right-side asset angle
+    // determine the absolute facing angle vs the available right-side asset angle
     if (movement.up && movement.right)       { lastAngle = '45';  lookupAngle = '45';  shouldFlip = false; }
     else if (movement.up && movement.left)   { lastAngle = '315'; lookupAngle = '45';  shouldFlip = true;  }
     else if (movement.down && movement.right){ lastAngle = '135'; lookupAngle = '135'; shouldFlip = false; }
@@ -256,14 +262,14 @@ function updateMovement() {
             animationFrame = (animationFrame + 1) % playerAnimations[lookupAngle].length;
         }
 
-        // Set sprite name string
+        // set sprite name string
         player.currentSpriteImg = playerAnimations[lookupAngle][animationFrame];
 
     } else {
         animationFrame = 0;
         animationTimer = 0;
 
-        // Decode idle asset states out of our last known facing direction
+        // decode idle asset states out of last known facing direction
         if (lastAngle === '315') { lookupAngle = '45'; shouldFlip = true; }
         else if (lastAngle === '225') { lookupAngle = '135'; shouldFlip = true; }
         else if (lastAngle === '270') { lookupAngle = '90'; shouldFlip = true; }
@@ -280,7 +286,7 @@ function updateMovement() {
             characterImg.src = player.currentSpriteImg;
         }
 
-      // Keep the player fully inside the world.
+      // keep the player fully inside the world
       const minimumPlayerX = 0;
       const maximumPlayerX = world.clientWidth - playerWidth;
       const minimumPlayerY = 0;
@@ -296,7 +302,7 @@ function updateMovement() {
         player.y = maximumPlayerY;
       }
 
-      // Position the wrapper and handle the horizontal left-flip transform
+      // position the wrapper and handle the horizontal left-flip transform
       playerWrapper.style.transform = `translate(${player.x}px, ${player.y}px) scaleX(${shouldFlip ? -1 : 1})`;
       updateCamera();
       updateInteractionPrompt();
@@ -307,7 +313,10 @@ function updateMovement() {
 
 requestAnimationFrame(updateMovement);
 
-// question and answer system!
+// ============================================================
+// QUIZ / KANA PRACTICE SYSTEM
+// ============================================================
+
 const kanaBank = [
     { romaji: "a", hiragana: "あ", katakana: "ア" },
     { romaji: "i", hiragana: "い", katakana: "イ" },
@@ -356,6 +365,8 @@ const kanaBank = [
     { romaji: "wo", hiragana: "を", katakana: "ヲ" },
     { romaji: "n", hiragana: "ん", katakana: "ン" }
 ];
+
+// --- player progression & XP ---
 
 let playerLevel = 1;
 const maxPlayerLevel = 25;
@@ -413,7 +424,7 @@ document.querySelectorAll(".mode-btn").forEach(btn => {
     menuScreen.classList.add("hidden");
     gameScreen.classList.remove("hidden");
     
-    // Start specialized clock if Timed Mode is chosen
+    // start specialized clock if timed mode is chosen
     if (currentMode === "timed") {
       startTimedPracticeSession();
     } else {
@@ -424,13 +435,13 @@ document.querySelectorAll(".mode-btn").forEach(btn => {
 
 function openQuizModal() {
   overlay.classList.remove("hidden");
-  menuScreen.classList.remove("hidden"); // Always route back to choice center
+  menuScreen.classList.remove("hidden"); // always route back to choice center
   gameScreen.classList.add("hidden");
-  isGamePaused = true; // Signals character movement updates to halt execution
+  isGamePaused = true; // signals character movement updates to halt execution
 }
 
 function closeQuizModal() {
-  // If player clicks close button while timed mode interval is actively processing...
+  // if player clicks close button while timed mode interval is actively processing...
   if (currentMode === "timed" && timedCountdownInterval !== null && secondsRemaining > 0) {
     const confirmExit = confirm("⚠️ Are you sure you want to exit early? You will not gain any EXP for this session!");
     
@@ -439,7 +450,7 @@ function closeQuizModal() {
     }
   }
 
-  // Clear running timers if player leaves early
+  // clear running timers if player leaves early
   if (timedCountdownInterval) {
     clearInterval(timedCountdownInterval);
     timedCountdownInterval = null;
@@ -500,12 +511,14 @@ function closeKanaReference() {
   isGamePaused = false;
 }
 
-// IN-MODAL TIMER ENGINE
+// --- timed practice ---
+
+// timer engine
 function startTimedPracticeSession() {
   secondsRemaining = 60;
   timedSessionCorrectCount = 0;
   modalTimerText.textContent = secondsRemaining;
-  modalTimerBlock.classList.remove("hidden"); // Render clock panel above question blocks
+  modalTimerBlock.classList.remove("hidden"); // render clock panel above question blocks
   
   nextQuestionSession();
   
@@ -551,6 +564,8 @@ function endTimedPracticeSession() {
   
   choicesContainer.appendChild(menuReturnBtn);
 }
+
+// --- leveling ---
 
 function gainEXP(amount) {
   currentEXP += amount;
@@ -605,6 +620,8 @@ document.getElementById("level-up-close-btn").addEventListener("click", () => {
   isGamePaused = false;
 });
 
+// --- question generation & answer checking ---
+
 function generateRandomQuestion() {
   const targetIndex = Math.floor(Math.random() * kanaBank.length);
   const target = kanaBank[targetIndex];
@@ -640,7 +657,7 @@ function generateRandomQuestion() {
     }
   }
 
-  // Shuffle selections array down to exactly 3 wrong items + 1 right choice
+  // shuffle selections array down to exactly 3 wrong items + 1 right choice
   wrongChoicesPool.sort(() => 0.5 - Math.random());
   const finalChoices = [correctAnswerText, wrongChoicesPool[0], wrongChoicesPool[1], wrongChoicesPool[2]];
   finalChoices.sort(() => 0.5 - Math.random()); 
@@ -667,7 +684,7 @@ function nextQuestionSession() {
 function checkKanaAnswer(selectedButton, chosenText) {
   feedbackText.classList.remove("hidden");
   
-  // Lock selection choices immediately
+  // lock selection choices immediately
   const choiceButtons = choicesContainer.querySelectorAll(".choice-btn");
   choiceButtons.forEach(btn => btn.disabled = true);
 
@@ -692,14 +709,14 @@ function checkKanaAnswer(selectedButton, chosenText) {
     selectedButton.style.backgroundColor = "#ffebee";
   }
 
-  // If in timed mode, skip the manual "Next Question" click
-  // It waits exactly 0.6 seconds so they see the feedback color, then auto-loads the next question
+  // if in timed mode, skip the manual "next question" click
+  // it waits exactly 0.6 seconds so they see the feedback color, then auto-loads the next question
   if (currentMode === "timed") {
     setTimeout(() => {
       if (secondsRemaining > 0) nextQuestionSession();
     }, 600);
   } else {
-    // Normal practice modes get the manual click button path
+    // normal practice modes get the manual click button path
     const nextBtn = document.createElement("button");
     nextBtn.id = "modal-next-action-btn";
     nextBtn.textContent = "Next Question 👉";
@@ -711,6 +728,8 @@ function checkKanaAnswer(selectedButton, chosenText) {
   }
 }
 
+// --- HUD ---
+
 // REFRESH STAT DATA COUNTERS
 function updateHUD() {
   document.getElementById("hud-coins").textContent = playerWallet;
@@ -718,9 +737,13 @@ function updateHUD() {
   document.getElementById("hud-exp").textContent = `${currentEXP}/${expNeededForLevelUp}`;
 }
 
-// plants n' stuff
+// ============================================================
+// GARDEN SYSTEM
+// ============================================================
 
-// Represents the interactive soil plots on screen
+// --- garden configuration ---
+
+// represents the interactive soil plots on screen
 const dirtTileImages = [
   "dirt/dirt_01.png",
   "dirt/dirt_03.png",
@@ -752,6 +775,8 @@ gardenPlots[0].plants[0] = {
   currentStage: 3
 };
 
+// --- crop helpers ---
+
 function getCropTier(cropOrId) {
   const crop = typeof cropOrId === "string" ? seedCatalog[cropOrId] : cropOrId;
   if (!crop || !Number.isFinite(crop.unlockLevel)) return 1;
@@ -762,7 +787,7 @@ function createTierCrop({ id, name, buyPrice, unlockLevel }) {
   const tier = Math.ceil(unlockLevel / 5);
   const questionsPerTier = 3;
   const requiredQuestions = tier * questionsPerTier;
-  const maxStages = 4; // Seed + 3 growth stages before harvest
+  const maxStages = 4; // seed + 3 growth stages before harvest
 
   return {
     id,
@@ -782,6 +807,8 @@ function getCropHarvestReward(cropOrId) {
 function getStageImage(cropType, stage) {
   return `crops, seeds, signs, items/${cropType}${Math.max(1, Math.min(stage, 4))}.png`;
 }
+
+// --- garden rendering ---
 
 function renderGardenPlots() {
   plotsContainer.innerHTML = "";
@@ -836,6 +863,8 @@ function renderGardenPlots() {
     if (typeof seedCatalog !== "undefined") updateInteractionPrompt();
   });
 }
+
+// --- planting & harvesting ---
 
 function getPlotPlant(plotId, slotIndex) {
   const plot = gardenPlots.find(currentPlot => currentPlot.id === plotId);
@@ -902,6 +931,8 @@ function showHarvestEXP(plantWrapper, expValue = 1) {
   expPopup.addEventListener("animationend", () => expPopup.remove(), { once: true });
 }
 
+// --- garden interaction ---
+
 function handleNearbyInteraction(plotId, slotIndex) {
   const interaction = nearbyInteraction;
   if (!interaction || interaction.plotId !== plotId || interaction.slotIndex !== slotIndex) return;
@@ -958,6 +989,8 @@ function updateInteractionPrompt() {
 
 renderGardenPlots();
 
+// --- plant growth ---
+
 function progressGardenGrowth() {
   gardenPlots.forEach(plot => {
     plot.plants.forEach(plant => {
@@ -978,7 +1011,11 @@ function progressGardenGrowth() {
   updateInteractionPrompt();
 }
 
-// shop system
+// ============================================================
+// CROP DATA, INVENTORY & SHOP
+// ============================================================
+
+// --- crop catalog ---
 
 const seedCatalog = {
   // Tier 1: Levels 1-5 | 3 questions each | +1 EXP harvest
@@ -1017,11 +1054,13 @@ const seedCatalog = {
   sunflower: createTierCrop({ id: "sunflower", name: "Sunflower", buyPrice: 29, unlockLevel: 25 })
 };
 
+// --- player wallet & inventory ---
+
 let playerWallet = 10; 
 let playerInventory = {
-  // Seeds available for planting
+  // seeds available for planting
   wheatSeeds: 0,
-  // Harvested mature crops available to sell
+  // harvested mature crops available to sell
   harvestedWheat: 0
 };
 
@@ -1051,6 +1090,8 @@ function getInventoryItems() {
 function hasInventorySpace() {
   return getInventoryItems().length < inventoryCapacity;
 }
+
+// --- inventory rendering ---
 
 function renderInventory() {
   inventorySlots.innerHTML = "";
@@ -1118,6 +1159,8 @@ inventoryButton.addEventListener("click", toggleInventory);
 renderInventory();
 updateHUD();
 
+// --- shop state & UI ---
+
 let currentShopTab = "buy"; // 'buy' or 'sell'
 const buyQuantities = {};
 
@@ -1132,13 +1175,13 @@ const shopSearchInput = document.getElementById("shop-search");
 
 shopOpenBtn.addEventListener("click", () => {
   shopOverlay.classList.remove("hidden");
-  isGamePaused = true; // Freeze walking input arrays
+  isGamePaused = true; // freeze walking input arrays
   updateShopUI();
 });
 
 shopCloseBtn.addEventListener("click", () => {
   shopOverlay.classList.add("hidden");
-  isGamePaused = false; // Restore movement capabilities
+  isGamePaused = false; // restore movement 
   updateInteractionPrompt();
 });
 
@@ -1159,8 +1202,8 @@ function switchTab(tabName) {
 }
 
 function updateShopUI() {
-  walletDisplay.textContent = playerWallet; // Refresh coin display text
-  itemsContainer.innerHTML = ""; // Clear existing elements
+  walletDisplay.textContent = playerWallet; // refresh coin display text
+  itemsContainer.innerHTML = ""; // clear existing elements
 
   const searchTerm = shopSearchInput.value.trim().toLowerCase();
   const isBuyTab = currentShopTab === "buy";
@@ -1265,13 +1308,15 @@ function updateShopUI() {
       `;
       
       const sellActionBtn = card.querySelector("button");
-      if (!hasSellPrice || ownedCrops <= 0) sellActionBtn.disabled = true; // Disable un-configured crops or empty inventory
+      if (!hasSellPrice || ownedCrops <= 0) sellActionBtn.disabled = true; // disable un-configured crops or empty inventory
       sellActionBtn.addEventListener("click", () => sellCropItem(crop));
     }
 
     itemsContainer.appendChild(card);
   });
 }
+
+// --- shop transactions ---
 
 function buyNextGardenPlot() {
   const nextPlot = plotUpgrades[gardenPlots.length - 1];
@@ -1319,13 +1364,17 @@ function sellCropItem(crop) {
   }
 }
 
-// quest system
+// ============================================================
+// QUEST SYSTEM
+// ============================================================
 
 const questSlotCount = 3;
 const questsContainer = document.getElementById("quests-container");
 let activeQuests = [null, null, null];
 
-// Quest tier climbs with player level, the same way crop tiers do, and
+// --- quest progression & generation ---
+
+// quest tier climbs with player level, the same way crop tiers do, and
 // controls both the size of quest targets and the size of their rewards.
 function getQuestTier() {
   return Math.min(5, Math.max(1, Math.ceil(playerLevel / 5)));
@@ -1339,7 +1388,7 @@ function makeQuestId() {
   return `quest-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
 }
 
-// Rewards scale with tier: higher tiers roll bigger coin/EXP ranges.
+// rewards scale with tier: higher tiers roll bigger coin/EXP ranges.
 function rollQuestReward(tier) {
   const rewardIsCoins = Math.random() < 0.5;
 
@@ -1404,11 +1453,11 @@ function createTimedQuest(tier) {
   };
 }
 
-// Builds one fresh quest, picking randomly among the three quest families:
+// builds one fresh quest, picking randomly among the three quest families:
 // harvesting (reflecting only crops the player currently has unlocked),
 // kana practice (regular questions), and timed practice sessions.
 // `excludeTypes` lets callers avoid handing back a type that's already
-// active elsewhere, so the 3 quest slots stay varied like the wireframe.
+// active elsewhere
 function generateQuest(excludeTypes = []) {
   const tier = getQuestTier();
   const questBuilders = {
@@ -1428,7 +1477,7 @@ function generateQuest(excludeTypes = []) {
     if (quest) return quest;
   }
 
-  // Last-resort fallback across every type.
+  // last-resort fallback across every type
   const allTypesShuffled = Object.keys(questBuilders).sort(() => 0.5 - Math.random());
   for (const type of allTypesShuffled) {
     const quest = questBuilders[type]();
@@ -1437,6 +1486,8 @@ function generateQuest(excludeTypes = []) {
 
   return createQuestionsQuest(tier);
 }
+
+// --- quest rendering ---
 
 function renderQuestCard(quest) {
   const card = document.createElement("div");
@@ -1480,14 +1531,17 @@ function renderQuests() {
     if (quest) questsContainer.appendChild(renderQuestCard(quest));
   });
 
-  // Keep the collapsible panel's max-height in sync if it's currently open.
+  // keep the collapsible panel's max-height in sync if it's currently open.
   if (questContent.classList.contains("is-open")) {
     questContent.style.maxHeight = `${questContent.scrollHeight}px`;
   }
 }
 
-// Claiming a completed quest pays out its reward, fades the card out,
+// claiming a completed quest pays out its reward, fades the card out,
 // then replaces it with a freshly generated quest that fades back in.
+
+// --- quest claiming & progress ---
+
 function claimQuest(questId) {
   const questIndex = activeQuests.findIndex(quest => quest && quest.id === questId);
   if (questIndex === -1) return;
@@ -1516,14 +1570,14 @@ function claimQuest(questId) {
   if (cardElement) {
     cardElement.classList.add("quest-fade-out");
     cardElement.addEventListener("transitionend", replaceQuest, { once: true });
-    // Fallback in case the transition event doesn't fire (e.g. reduced motion settings).
+    // fallback in case the transition event doesn't fire (e.g. reduced motion settings).
     setTimeout(replaceQuest, 450);
   } else {
     replaceQuest();
   }
 }
 
-// Advances progress on every active quest of a given type that matches an
+// advances progress on every active quest of a given type that matches an
 // optional filter (used so harvest progress only applies to the matching crop).
 function updateQuestProgress(type, matcher, amount = 1) {
   let didChange = false;
@@ -1551,6 +1605,10 @@ function initQuests() {
 }
 
 initQuests();
+
+// ============================================================
+// SAVE / LOAD & AUTOSAVE
+// ============================================================
 
 function saveGameState() {
   const gameState = {
