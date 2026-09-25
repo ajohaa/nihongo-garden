@@ -28,6 +28,7 @@ const sfxSlider = document.getElementById("sfx-slider");
 let musicStarted = false;
 const sfxAudioMap = {};
 const questsToggle = document.querySelector(".quests-toggle");
+const questsToggleIcon = questsToggle.querySelector(".quests-toggle-icon");
 const questContent = document.getElementById("quest-content");
 
 questsToggle.addEventListener("click", () => {
@@ -35,7 +36,7 @@ questsToggle.addEventListener("click", () => {
   questsToggle.setAttribute("aria-expanded", String(!isOpen));
   questContent.classList.toggle("is-open", !isOpen);
   questContent.style.maxHeight = isOpen ? "0px" : `${questContent.scrollHeight}px`;
-  questsToggle.textContent = isOpen ? "Quests v" : "Quests ^";
+  questsToggleIcon.textContent = isOpen ? "☰" : "X";
 });
 
 backgroundMusic.volume = Number(musicSlider.value) / 100;
@@ -69,6 +70,7 @@ function playSfx(name) {
 
 musicSlider.addEventListener("input", () => {
   backgroundMusic.volume = Number(musicSlider.value) / 100;
+  saveGameState();
 });
 
 sfxSlider.addEventListener("input", () => {
@@ -76,6 +78,7 @@ sfxSlider.addEventListener("input", () => {
   Object.values(sfxAudioMap).forEach(audio => {
     audio.volume = volume;
   });
+  saveGameState();
 });
 
 function regularButton(button) {
@@ -1507,6 +1510,7 @@ function claimQuest(questId) {
       .map(otherQuest => otherQuest.type);
     activeQuests[questIndex] = generateQuest(otherActiveTypes);
     renderQuests();
+    saveGameState();
   };
 
   if (cardElement) {
@@ -1534,6 +1538,7 @@ function updateQuestProgress(type, matcher, amount = 1) {
   });
 
   if (didChange) renderQuests();
+  if (didChange) saveGameState();
 }
 
 function initQuests() {
@@ -1554,7 +1559,10 @@ function saveGameState() {
     expNeededForLevelUp,
     playerWallet,
     playerInventory,
-    gardenPlots
+    gardenPlots,
+    activeQuests,
+    musicVolume: Number(musicSlider.value),
+    sfxVolume: Number(sfxSlider.value)
   };
   localStorage.setItem("kanaGardenGameState", JSON.stringify(gameState));
   console.log("Game state saved.");
@@ -1575,6 +1583,20 @@ function loadGameState() {
       playerWallet = gameState.playerWallet || 10;
       playerInventory = gameState.playerInventory || {};
       gardenPlots = gameState.gardenPlots || [createGardenPlot(1)];
+      if (Array.isArray(gameState.activeQuests) && gameState.activeQuests.length === questSlotCount) {
+        activeQuests = gameState.activeQuests;
+      }
+      if (Number.isFinite(gameState.musicVolume)) {
+        musicSlider.value = Math.max(0, Math.min(100, gameState.musicVolume));
+        backgroundMusic.volume = Number(musicSlider.value) / 100;
+      }
+      if (Number.isFinite(gameState.sfxVolume)) {
+        sfxSlider.value = Math.max(0, Math.min(100, gameState.sfxVolume));
+        const sfxVolume = Number(sfxSlider.value) / 100;
+        Object.values(sfxAudioMap).forEach(audio => {
+          audio.volume = sfxVolume;
+        });
+      }
       updateHUD();
       renderGardenPlots();
       renderInventory();

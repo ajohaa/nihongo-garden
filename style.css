@@ -970,8 +970,13 @@ img {
   cursor: pointer;
   padding: 12px 20px;
   border: none;
-  border-radius: 4px;
+  border-radius: 20px;
+  min-width: 150px;
   font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   text-align: left;
   z-index: 1000;
   transition: background-color 0.3s ease;
@@ -979,9 +984,10 @@ img {
 
 /* Collapsible container hidden by default */
 .collapsible-content {
-  border-radius: 10px;
+  border-radius: 15px;
+  border: 3px solid #d28c41;
   position: absolute;
-  top: 108px;
+  top: 110px;
   left: 20px;
   z-index: 999;
   width: min(280px, calc(100% - 40px));
@@ -998,7 +1004,7 @@ img {
 }
 
 .quests-container {
-  border-radius: 10px;
+  border-radius: 15px;
   display: flex;
   flex-direction: column;
   gap: 10px;
