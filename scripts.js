@@ -531,6 +531,7 @@ function endTimedPracticeSession() {
   choicesContainer.innerHTML = "";
   
   gainEXP(expGained);
+  updateQuestProgress("timed", null, 1);
 
   const menuReturnBtn = document.createElement("button");
   menuReturnBtn.className = "choice-btn";
@@ -675,6 +676,7 @@ function checkKanaAnswer(selectedButton, chosenText) {
       totalCorrectAnswers++;
       progressGardenGrowth();
     }
+    updateQuestProgress("questions", null, 1);
     feedbackText.textContent = "✨ Great job! Your answer is correct.";
     feedbackText.className = "correct-msg";
     selectedButton.style.borderColor = "#2e7d32";
@@ -870,10 +872,12 @@ function harvestCrop(plotId, slotIndex) {
   const plot = gardenPlots.find(currentPlot => currentPlot.id === plotId);
   const plantWrapper = document.querySelector(`.plant-wrapper[data-plot-id="${plotId}"][data-slot-index="${slotIndex}"]`);
   const harvestedKey = `harvested${plant.cropType.charAt(0).toUpperCase()}${plant.cropType.slice(1)}`;
+  const harvestedCropType = plant.cropType;
   plot.plants[slotIndex] = null;
   playerInventory[harvestedKey] = (playerInventory[harvestedKey] || 0) + 1;
   gainEXP(getCropHarvestReward(cropInfo));
   showHarvestEXP(plantWrapper, getCropHarvestReward(cropInfo));
+  updateQuestProgress("harvest", quest => quest.cropId === harvestedCropType, 1);
   nearbyInteraction = null;
   renderGardenPlots();
   renderInventory();
@@ -1312,6 +1316,237 @@ function sellCropItem(crop) {
   }
 }
 
+// quest system
+
+const questSlotCount = 3;
+const questsContainer = document.getElementById("quests-container");
+let activeQuests = [null, null, null];
+
+// Quest tier climbs with player level, the same way crop tiers do, and
+// controls both the size of quest targets and the size of their rewards.
+function getQuestTier() {
+  return Math.min(5, Math.max(1, Math.ceil(playerLevel / 5)));
+}
+
+function getUnlockedCrops() {
+  return Object.values(seedCatalog).filter(crop => Number.isFinite(crop.unlockLevel) && crop.unlockLevel <= playerLevel);
+}
+
+function makeQuestId() {
+  return `quest-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+}
+
+// Rewards scale with tier: higher tiers roll bigger coin/EXP ranges.
+function rollQuestReward(tier) {
+  const rewardIsCoins = Math.random() < 0.5;
+
+  if (rewardIsCoins) {
+    const minCoins = tier * 10;
+    const maxCoins = tier * 20;
+    return { type: "coins", amount: minCoins + Math.floor(Math.random() * (maxCoins - minCoins + 1)) };
+  }
+
+  const minExp = tier * 5;
+  const maxExp = tier * 12;
+  return { type: "exp", amount: minExp + Math.floor(Math.random() * (maxExp - minExp + 1)) };
+}
+
+function createHarvestQuest(tier) {
+  const unlockedCrops = getUnlockedCrops();
+  if (unlockedCrops.length === 0) return null;
+
+  const crop = unlockedCrops[Math.floor(Math.random() * unlockedCrops.length)];
+  const target = tier + Math.floor(Math.random() * 3) + 2; // e.g. tier 1 -> 3-5
+
+  return {
+    id: makeQuestId(),
+    type: "harvest",
+    cropId: crop.id,
+    title: `${crop.name} Harvesting`,
+    description: `Harvest ${target} ${crop.name}`,
+    progress: 0,
+    target,
+    reward: rollQuestReward(tier),
+    tier
+  };
+}
+
+function createQuestionsQuest(tier) {
+  const target = tier * 5 + Math.floor(Math.random() * 6); // e.g. tier 1 -> 5-10
+
+  return {
+    id: makeQuestId(),
+    type: "questions",
+    title: "Kana Practice",
+    description: `Answer ${target} questions`,
+    progress: 0,
+    target,
+    reward: rollQuestReward(tier),
+    tier
+  };
+}
+
+function createTimedQuest(tier) {
+  const target = Math.min(5, Math.max(1, Math.ceil(tier / 2) + Math.floor(Math.random() * 2))); // 1-3ish sessions
+
+  return {
+    id: makeQuestId(),
+    type: "timed",
+    title: "Timed Practice",
+    description: `Finish ${target} timed session${target > 1 ? "s" : ""}`,
+    progress: 0,
+    target,
+    reward: rollQuestReward(tier),
+    tier
+  };
+}
+
+// Builds one fresh quest, picking randomly among the three quest families:
+// harvesting (reflecting only crops the player currently has unlocked),
+// kana practice (regular questions), and timed practice sessions.
+// `excludeTypes` lets callers avoid handing back a type that's already
+// active elsewhere, so the 3 quest slots stay varied like the wireframe.
+function generateQuest(excludeTypes = []) {
+  const tier = getQuestTier();
+  const questBuilders = {
+    harvest: () => createHarvestQuest(tier),
+    questions: () => createQuestionsQuest(tier),
+    timed: () => createTimedQuest(tier)
+  };
+
+  const preferredTypes = Object.keys(questBuilders).filter(type => !excludeTypes.includes(type));
+  const typesToTry = preferredTypes.length > 0 ? preferredTypes : Object.keys(questBuilders);
+
+  // Try types in a random order in case the first pick can't produce a quest yet
+  // (e.g. a harvest quest with no unlocked crops, which shouldn't normally happen).
+  const shuffledTypes = [...typesToTry].sort(() => 0.5 - Math.random());
+  for (const type of shuffledTypes) {
+    const quest = questBuilders[type]();
+    if (quest) return quest;
+  }
+
+  // Last-resort fallback across every type.
+  const allTypesShuffled = Object.keys(questBuilders).sort(() => 0.5 - Math.random());
+  for (const type of allTypesShuffled) {
+    const quest = questBuilders[type]();
+    if (quest) return quest;
+  }
+
+  return createQuestionsQuest(tier);
+}
+
+function renderQuestCard(quest) {
+  const card = document.createElement("div");
+  card.className = "quest-card";
+  card.dataset.questId = quest.id;
+
+  const isComplete = quest.progress >= quest.target;
+  const rewardLabel = quest.reward.type === "coins" ? `${quest.reward.amount}g` : `${quest.reward.amount}xp`;
+  const clampedProgress = Math.min(quest.progress, quest.target);
+
+  card.innerHTML = `
+    <div class="quest-info">
+      <span class="quest-title">${quest.title}</span>
+      <span class="quest-description">${quest.description}</span>
+      <span class="quest-progress">Progress: ${clampedProgress}/${quest.target}</span>
+    </div>
+    <div class="quest-action">
+      <button type="button" class="quest-check-btn${isComplete ? " completed" : ""}"
+        aria-label="${isComplete ? `Claim reward for ${quest.title}` : `${quest.title} in progress`}">
+        <span class="quest-check-icon">✓</span>
+      </button>
+      <span class="quest-reward">Reward: ${rewardLabel}</span>
+    </div>
+  `;
+
+  card.querySelector(".quest-check-btn").addEventListener("click", () => claimQuest(quest.id));
+
+  return card;
+}
+
+function renderQuests() {
+  questsContainer.innerHTML = "";
+
+  const hasAnyQuest = activeQuests.some(Boolean);
+  if (!hasAnyQuest) {
+    questsContainer.innerHTML = '<p class="quests-empty-message">No quests available right now.</p>';
+    return;
+  }
+
+  activeQuests.forEach(quest => {
+    if (quest) questsContainer.appendChild(renderQuestCard(quest));
+  });
+
+  // Keep the collapsible panel's max-height in sync if it's currently open.
+  if (questContent.classList.contains("is-open")) {
+    questContent.style.maxHeight = `${questContent.scrollHeight}px`;
+  }
+}
+
+// Claiming a completed quest pays out its reward, fades the card out,
+// then replaces it with a freshly generated quest that fades back in.
+function claimQuest(questId) {
+  const questIndex = activeQuests.findIndex(quest => quest && quest.id === questId);
+  if (questIndex === -1) return;
+
+  const quest = activeQuests[questIndex];
+  if (quest.progress < quest.target) return;
+
+  if (quest.reward.type === "coins") {
+    playerWallet += quest.reward.amount;
+    updateHUD();
+  } else {
+    gainEXP(quest.reward.amount);
+  }
+  playSfx("quest-complete");
+
+  const cardElement = questsContainer.querySelector(`.quest-card[data-quest-id="${questId}"]`);
+  const replaceQuest = () => {
+    const otherActiveTypes = activeQuests
+      .filter((otherQuest, otherIndex) => otherIndex !== questIndex && otherQuest)
+      .map(otherQuest => otherQuest.type);
+    activeQuests[questIndex] = generateQuest(otherActiveTypes);
+    renderQuests();
+  };
+
+  if (cardElement) {
+    cardElement.classList.add("quest-fade-out");
+    cardElement.addEventListener("transitionend", replaceQuest, { once: true });
+    // Fallback in case the transition event doesn't fire (e.g. reduced motion settings).
+    setTimeout(replaceQuest, 450);
+  } else {
+    replaceQuest();
+  }
+}
+
+// Advances progress on every active quest of a given type that matches an
+// optional filter (used so harvest progress only applies to the matching crop).
+function updateQuestProgress(type, matcher, amount = 1) {
+  let didChange = false;
+
+  activeQuests.forEach(quest => {
+    if (!quest || quest.type !== type) return;
+    if (matcher && !matcher(quest)) return;
+    if (quest.progress >= quest.target) return;
+
+    quest.progress = Math.min(quest.target, quest.progress + amount);
+    didChange = true;
+  });
+
+  if (didChange) renderQuests();
+}
+
+function initQuests() {
+  activeQuests = [];
+  for (let slotIndex = 0; slotIndex < questSlotCount; slotIndex++) {
+    const usedTypes = activeQuests.map(quest => quest && quest.type).filter(Boolean);
+    activeQuests.push(generateQuest(usedTypes));
+  }
+  renderQuests();
+}
+
+initQuests();
+
 function saveGameState() {
   const gameState = {
     playerLevel,
@@ -1326,7 +1561,7 @@ function saveGameState() {
 }
 
 function autosave() {
-  setInterval(saveGameState, 180000);
+  setInterval(saveGameState, 30000); 
 }
 
 function loadGameState() {
@@ -1343,6 +1578,7 @@ function loadGameState() {
       updateHUD();
       renderGardenPlots();
       renderInventory();
+      renderQuests();
       console.log("Game state loaded.");
     } catch (error) {
       console.error("Failed to load game state:", error);

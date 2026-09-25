@@ -979,7 +979,7 @@ img {
 
 /* Collapsible container hidden by default */
 .collapsible-content {
-  border-radius: 10px;  
+  border-radius: 10px;
   position: absolute;
   top: 108px;
   left: 20px;
@@ -989,11 +989,12 @@ img {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease-out;
-  background-color: #f9f9f9;
+  background-color: #fdf6ea;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 
 .collapsible-content.is-open {
-  max-height: 500px;
+  max-height: 600px;
 }
 
 .quests-container {
@@ -1001,16 +1002,126 @@ img {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 16px;
+  padding: 14px;
 }
 
-/* Individual card styling */
+/* ===== Quest cards (matches wireframe: orange card + checkmark badge) ===== */
 .quest-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 12px;
   width: 100%;
   box-sizing: border-box;
-  background: white;
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  background-color: #d28c41;
+  border: 2px solid #b5732e;
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15), inset 0 0 0 2px rgba(255, 255, 255, 0.18);
+  transition: opacity 0.35s ease, transform 0.35s ease, max-height 0.35s ease;
+  overflow: hidden;
+}
+
+.quest-card.quest-fade-out {
+  opacity: 0;
+  transform: scale(0.92);
+}
+
+.quest-card.quest-fade-in {
+  animation: quest-card-fade-in 0.35s ease;
+}
+
+@keyframes quest-card-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.quest-info {
+  grid-column: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.quest-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #4a2f14;
+  margin-bottom: 2px;
+}
+
+.quest-description {
+  font-size: 13px;
+  color: #fff6e9;
+  margin-bottom: 10px;
+}
+
+.quest-progress {
+  font-size: 12px;
+  font-weight: bold;
+  color: #fff6e9;
+}
+
+.quest-action {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.quest-reward {
+  font-size: 12px;
+  font-weight: bold;
+  color: #fff6e9;
+  white-space: nowrap;
+}
+
+.quest-check-btn {
+  width: 50px;
+  height: 48px;
+  padding: 0;
+  border: 2px solid #5c3a1f;
+  border-radius: 8px;
+  background-color: #7a5230;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.quest-check-btn .quest-check-icon {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 18px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.quest-check-btn.completed {
+  border-color: #4caf50;
+  background-color: #66bb6a;
+  cursor: pointer;
+}
+
+.quest-check-btn.completed .quest-check-icon {
+  color: #ffffff;
+}
+
+.quest-check-btn.completed:hover {
+  border-color: #4caf50;
+  background-color: #57a85b;
+  transform: scale(1.06);
+}
+
+.quests-empty-message {
+  color: #eef7ee;
+  font-size: 13px;
+  text-align: center;
+  padding: 10px 0;
 }
