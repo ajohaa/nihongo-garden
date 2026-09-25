@@ -35,6 +35,7 @@ const questContent = document.getElementById("quest-content");
 
 questsToggle.addEventListener("click", () => {
   const isOpen = questsToggle.getAttribute("aria-expanded") === "true";
+  if (!isOpen) closeAllPopups();
   questsToggle.setAttribute("aria-expanded", String(!isOpen));
   questContent.classList.toggle("is-open", !isOpen);
   questContent.style.maxHeight = isOpen ? "0px" : `${questContent.scrollHeight}px`;
@@ -402,7 +403,27 @@ const feedbackText = document.getElementById("feedback-text");
 const modalTimerBlock = document.getElementById("modal-timer");
 const modalTimerText = document.getElementById("modal-timer-countdown");
 
+function closeAllPopups() {
+  document.querySelectorAll("#inventory-panel, #settings-panel, #shop-modal-overlay, #quiz-modal-overlay, #level-up-overlay, #kana-reference-overlay")
+    .forEach(popup => popup.classList.add("hidden"));
+
+  questsToggle.setAttribute("aria-expanded", "false");
+  questsToggleIcon.textContent = "☰";
+  questContent.classList.remove("is-open");
+  questContent.style.maxHeight = "0px";
+
+  if (timedCountdownInterval) {
+    clearInterval(timedCountdownInterval);
+    timedCountdownInterval = null;
+  }
+
+  feedbackText.classList.add("hidden");
+  modalTimerBlock.classList.add("hidden");
+  isGamePaused = false;
+}
+
 settingsBtn.addEventListener("click", () => {
+  closeAllPopups();
   settingsPanel.classList.remove("hidden");
   isGamePaused = true;
 });
@@ -434,6 +455,7 @@ document.querySelectorAll(".mode-btn").forEach(btn => {
 });
 
 function openQuizModal() {
+  closeAllPopups();
   overlay.classList.remove("hidden");
   menuScreen.classList.remove("hidden"); // always route back to choice center
   gameScreen.classList.add("hidden");
@@ -465,7 +487,7 @@ function closeQuizModal() {
 }
 
 function openKanaReference() {
-  if (!overlay.classList.contains("hidden")) return;
+  closeAllPopups();
 
   kanaReferenceGrid.innerHTML = "";
   const kanaRows = [
@@ -585,6 +607,7 @@ function gainEXP(amount) {
 
 function showLevelUpPopup() {
   playSfx("levelup");
+  closeAllPopups();
 
   const levelUpOverlay = document.getElementById("level-up-overlay");
   const levelUpMessage = document.getElementById("level-up-message");
@@ -1144,6 +1167,7 @@ function toggleInventory() {
     return;
   }
 
+  if (inventoryPanel.classList.contains("hidden")) closeAllPopups();
   inventoryPanel.classList.toggle("hidden");
   playSfx("open-close-inventory");
   if (!inventoryPanel.classList.contains("hidden")) {
@@ -1174,6 +1198,7 @@ const walletDisplay = document.getElementById("wallet-coins");
 const shopSearchInput = document.getElementById("shop-search");
 
 shopOpenBtn.addEventListener("click", () => {
+  closeAllPopups();
   shopOverlay.classList.remove("hidden");
   isGamePaused = true; // freeze walking input arrays
   updateShopUI();
