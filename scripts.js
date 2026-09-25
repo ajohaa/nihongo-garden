@@ -1,19 +1,21 @@
-// character movement
+// ============================================================================
+// SECTION 1: KEY MAPPING & MOVEMENT INPUT STATE
+// ============================================================================
 
 // state tracker for 4 primary movement keys (arrow keys and WASD)
 const movement = {
-    up: false,
-    down: false,
-    left: false,
-    right: false
+  up: false,
+  down: false,
+  left: false,
+  right: false
 };
 
 // Map physical keys to our movement directions
 const keyMap = {
-    'ArrowUp': 'up', 'w': 'up', 'W': 'up',
-    'ArrowDown': 'down', 's': 'down', 'S': 'down',
-    'ArrowLeft': 'left', 'a': 'left', 'A': 'left',
-    'ArrowRight': 'right', 'd': 'right', 'D': 'right'
+  'ArrowUp': 'up', 'w': 'up', 'W': 'up',
+  'ArrowDown': 'down', 's': 'down', 'S': 'down',
+  'ArrowLeft': 'left', 'a': 'left', 'A': 'left',
+  'ArrowRight': 'right', 'd': 'right', 'D': 'right'
 };
 
 function isTextInput(target) {
@@ -22,22 +24,15 @@ function isTextInput(target) {
     || target.isContentEditable;
 }
 
+// ============================================================================
+// SECTION 2: AUDIO SYSTEM (background music & sound effects)
+// ============================================================================
+
 const backgroundMusic = document.getElementById("background-music");
 const musicSlider = document.getElementById("music-slider");
 const sfxSlider = document.getElementById("sfx-slider");
 let musicStarted = false;
 const sfxAudioMap = {};
-const questsToggle = document.querySelector(".quests-toggle");
-const questsToggleIcon = questsToggle.querySelector(".quests-toggle-icon");
-const questContent = document.getElementById("quest-content");
-
-questsToggle.addEventListener("click", () => {
-  const isOpen = questsToggle.getAttribute("aria-expanded") === "true";
-  questsToggle.setAttribute("aria-expanded", String(!isOpen));
-  questContent.classList.toggle("is-open", !isOpen);
-  questContent.style.maxHeight = isOpen ? "0px" : `${questContent.scrollHeight}px`;
-  questsToggleIcon.textContent = isOpen ? "☰" : "X";
-});
 
 backgroundMusic.volume = Number(musicSlider.value) / 100;
 
@@ -68,19 +63,6 @@ function playSfx(name) {
   });
 }
 
-musicSlider.addEventListener("input", () => {
-  backgroundMusic.volume = Number(musicSlider.value) / 100;
-  saveGameState();
-});
-
-sfxSlider.addEventListener("input", () => {
-  const volume = Number(sfxSlider.value) / 100;
-  Object.values(sfxAudioMap).forEach(audio => {
-    audio.volume = volume;
-  });
-  saveGameState();
-});
-
 function regularButton(button) {
   if (!button) return false;
 
@@ -91,6 +73,17 @@ function regularButton(button) {
   return true;
 }
 
+musicSlider.addEventListener("input", () => {
+  backgroundMusic.volume = Number(musicSlider.value) / 100;
+});
+
+sfxSlider.addEventListener("input", () => {
+  const volume = Number(sfxSlider.value) / 100;
+  Object.values(sfxAudioMap).forEach(audio => {
+    audio.volume = volume;
+  });
+});
+
 document.addEventListener("pointerdown", startBackgroundMusic);
 document.addEventListener("keydown", startBackgroundMusic);
 document.addEventListener("click", (event) => {
@@ -98,6 +91,25 @@ document.addEventListener("click", (event) => {
   if (button && regularButton(button)) playSfx("buttonpress");
 });
 startBackgroundMusic();
+
+// ============================================================================
+// SECTION 3: UI PANEL TOGGLES (Quests panel)
+// ============================================================================
+
+const questsToggle = document.querySelector(".quests-toggle");
+const questContent = document.getElementById("quest-content");
+
+questsToggle.addEventListener("click", () => {
+  const isOpen = questsToggle.getAttribute("aria-expanded") === "true";
+  questsToggle.setAttribute("aria-expanded", String(!isOpen));
+  questContent.classList.toggle("is-open", !isOpen);
+  questContent.style.maxHeight = isOpen ? "0px" : `${questContent.scrollHeight}px`;
+  questsToggle.textContent = isOpen ? "Quests v" : "Quests ^";
+});
+
+// ============================================================================
+// SECTION 4: KEYBOARD MOVEMENT & INTERACTION INPUT
+// ============================================================================
 
 window.addEventListener("keydown", (event) => {
   if (isTextInput(event.target)) return;
@@ -112,23 +124,27 @@ window.addEventListener("keydown", (event) => {
     return;
   }
 
-    if (keyMap[event.key]) {
-        event.preventDefault();
-        movement[keyMap[event.key]] = true;
-    }
+  if (keyMap[event.key]) {
+    event.preventDefault();
+    movement[keyMap[event.key]] = true;
+  }
 });
 window.addEventListener("keyup", (event) => {
-    if (keyMap[event.key]) {
-        movement[keyMap[event.key]] = false;
-    }
+  if (keyMap[event.key]) {
+    movement[keyMap[event.key]] = false;
+  }
 });
 
+// ============================================================================
+// SECTION 5: PLAYER STATE, ANIMATION & MOVEMENT LOOP
+// ============================================================================
+
 const playerAnimations = {
-    '0': ['walk0.1.png', 'walk0.2.png', 'walk0.3.png', 'walk0.4.png', 'walk0.5.png'], // up
-    '180': ['walk180.1.png', 'walk180.2.png', 'walk180.3.png', 'walk180.4.png', 'walk180.5.png'], // down
-    '90': ['walk90.1.png', 'walk90.2.png', 'walk90.3.png', 'walk90.4.png', 'walk90.5.png'], // right
-    '45': ['walk45.1.png', 'walk45.2.png', 'walk45.3.png', 'walk45.4.png', 'walk45.5.png'], // up-right
-    '135': ['walk135.1.png', 'walk135.2.png', 'walk135.3.png', 'walk135.4.png', 'walk135.5.png'], // down-right
+  '0': ['walk0.1.png', 'walk0.2.png', 'walk0.3.png', 'walk0.4.png', 'walk0.5.png'], // up
+  '180': ['walk180.1.png', 'walk180.2.png', 'walk180.3.png', 'walk180.4.png', 'walk180.5.png'], // down
+  '90': ['walk90.1.png', 'walk90.2.png', 'walk90.3.png', 'walk90.4.png', 'walk90.5.png'], // right
+  '45': ['walk45.1.png', 'walk45.2.png', 'walk45.3.png', 'walk45.4.png', 'walk45.5.png'], // up-right
+  '135': ['walk135.1.png', 'walk135.2.png', 'walk135.3.png', 'walk135.4.png', 'walk135.5.png'], // down-right
 };
 
 // Player physics & rendering state
@@ -208,153 +224,156 @@ function updateCamera() {
 }
 
 function updateMovement() {
-    if (isGamePaused) {
-        requestAnimationFrame(updateMovement);
-        return; 
-    }
-    let dx = 0;
-    let dy = 0;
-
-    // Check mapped directions
-    if (movement.left) dx = -1;
-    if (movement.right) dx = 1;
-    if (movement.up) dy = -1;
-    if (movement.down) dy = 1;
-
-    // If moving diagonally, total speed increases by ~41% (Pythagorean theorem).
-    // We divide by Math.sqrt(2) to keep diagonal speed exactly the same as straight speed
-    if (dx !== 0 && dy !== 0) {
-        dx *= 0.7071;
-        dy *= 0.7071;
-    }
-
-    // Resolve each axis independently so the player can slide along plot edges.
-    const nextX = player.x + dx * player.speed;
-    const nextY = player.y + dy * player.speed;
-    if (!isPlayerPositionBlocked(nextX, player.y)) player.x = nextX;
-    if (!isPlayerPositionBlocked(player.x, nextY)) player.y = nextY;
-
-    let isMoving = (dx !== 0 || dy !== 0);
-    let lookupAngle = '180';
-    let shouldFlip = false;   // CSS transform flag
-    let currentSpriteImg = '';
-
-    if (isMoving) {
-    // Determine the absolute facing angle vs the available right-side asset angle
-    if (movement.up && movement.right)       { lastAngle = '45';  lookupAngle = '45';  shouldFlip = false; }
-    else if (movement.up && movement.left)   { lastAngle = '315'; lookupAngle = '45';  shouldFlip = true;  }
-    else if (movement.down && movement.right){ lastAngle = '135'; lookupAngle = '135'; shouldFlip = false; }
-    else if (movement.down && movement.left) { lastAngle = '225'; lookupAngle = '135'; shouldFlip = true;  }
-    else if (movement.up)                    { lastAngle = '0';   lookupAngle = '0';   shouldFlip = false; }
-    else if (movement.down)                  { lastAngle = '180'; lookupAngle = '180'; shouldFlip = false; }
-    else if (movement.right)                 { lastAngle = '90';  lookupAngle = '90';  shouldFlip = false; }
-    else if (movement.left)                  { lastAngle = '270'; lookupAngle = '90';  shouldFlip = true;  }
-
-        animationTimer++;
-        if (animationTimer >= ANIMATION_SPEED) {
-            animationTimer = 0;
-            animationFrame = (animationFrame + 1) % playerAnimations[lookupAngle].length;
-        }
-
-        // Set sprite name string
-        player.currentSpriteImg = playerAnimations[lookupAngle][animationFrame];
-
-    } else {
-        animationFrame = 0;
-        animationTimer = 0;
-
-        // Decode idle asset states out of our last known facing direction
-        if (lastAngle === '315') { lookupAngle = '45'; shouldFlip = true; }
-        else if (lastAngle === '225') { lookupAngle = '135'; shouldFlip = true; }
-        else if (lastAngle === '270') { lookupAngle = '90'; shouldFlip = true; }
-        else { lookupAngle = lastAngle; shouldFlip = false; }
-
-        player.currentSpriteImg = `idle${lookupAngle}.png`;
-    }
-
-    const playerWrapper = document.getElementById("player");
-    if (playerWrapper) {
-        const characterImg = playerWrapper.querySelector("img");
-
-        if (characterImg) {
-            characterImg.src = player.currentSpriteImg;
-        }
-
-      // Keep the player fully inside the world.
-      const minimumPlayerX = 0;
-      const maximumPlayerX = world.clientWidth - playerWidth;
-      const minimumPlayerY = 0;
-      const maximumPlayerY = world.clientHeight - playerHeight;
-
-      if (player.x < minimumPlayerX) player.x = minimumPlayerX;
-      if (player.x > maximumPlayerX) {
-        player.x = maximumPlayerX;
-      }
-
-      if (player.y < minimumPlayerY) player.y = minimumPlayerY;
-      if (player.y > maximumPlayerY) {
-        player.y = maximumPlayerY;
-      }
-
-      // Position the wrapper and handle the horizontal left-flip transform
-      playerWrapper.style.transform = `translate(${player.x}px, ${player.y}px) scaleX(${shouldFlip ? -1 : 1})`;
-      updateCamera();
-      updateInteractionPrompt();
-    }
-
+  if (isGamePaused) {
     requestAnimationFrame(updateMovement);
+    return;
+  }
+  let dx = 0;
+  let dy = 0;
+
+  // Check mapped directions
+  if (movement.left) dx = -1;
+  if (movement.right) dx = 1;
+  if (movement.up) dy = -1;
+  if (movement.down) dy = 1;
+
+  // If moving diagonally, total speed increases by ~41% (Pythagorean theorem).
+  // We divide by Math.sqrt(2) to keep diagonal speed exactly the same as straight speed
+  if (dx !== 0 && dy !== 0) {
+    dx *= 0.7071;
+    dy *= 0.7071;
+  }
+
+  // Resolve each axis independently so the player can slide along plot edges.
+  const nextX = player.x + dx * player.speed;
+  const nextY = player.y + dy * player.speed;
+  if (!isPlayerPositionBlocked(nextX, player.y)) player.x = nextX;
+  if (!isPlayerPositionBlocked(player.x, nextY)) player.y = nextY;
+
+  let isMoving = (dx !== 0 || dy !== 0);
+  let lookupAngle = '180';
+  let shouldFlip = false;   // CSS transform flag
+  let currentSpriteImg = '';
+
+  if (isMoving) {
+    // Determine the absolute facing angle vs the available right-side asset angle
+    if (movement.up && movement.right) { lastAngle = '45'; lookupAngle = '45'; shouldFlip = false; }
+    else if (movement.up && movement.left) { lastAngle = '315'; lookupAngle = '45'; shouldFlip = true; }
+    else if (movement.down && movement.right) { lastAngle = '135'; lookupAngle = '135'; shouldFlip = false; }
+    else if (movement.down && movement.left) { lastAngle = '225'; lookupAngle = '135'; shouldFlip = true; }
+    else if (movement.up) { lastAngle = '0'; lookupAngle = '0'; shouldFlip = false; }
+    else if (movement.down) { lastAngle = '180'; lookupAngle = '180'; shouldFlip = false; }
+    else if (movement.right) { lastAngle = '90'; lookupAngle = '90'; shouldFlip = false; }
+    else if (movement.left) { lastAngle = '270'; lookupAngle = '90'; shouldFlip = true; }
+
+    animationTimer++;
+    if (animationTimer >= ANIMATION_SPEED) {
+      animationTimer = 0;
+      animationFrame = (animationFrame + 1) % playerAnimations[lookupAngle].length;
+    }
+
+    // Set sprite name string
+    player.currentSpriteImg = playerAnimations[lookupAngle][animationFrame];
+
+  } else {
+    animationFrame = 0;
+    animationTimer = 0;
+
+    // Decode idle asset states out of our last known facing direction
+    if (lastAngle === '315') { lookupAngle = '45'; shouldFlip = true; }
+    else if (lastAngle === '225') { lookupAngle = '135'; shouldFlip = true; }
+    else if (lastAngle === '270') { lookupAngle = '90'; shouldFlip = true; }
+    else { lookupAngle = lastAngle; shouldFlip = false; }
+
+    player.currentSpriteImg = `idle${lookupAngle}.png`;
+  }
+
+  const playerWrapper = document.getElementById("player");
+  if (playerWrapper) {
+    const characterImg = playerWrapper.querySelector("img");
+
+    if (characterImg) {
+      characterImg.src = player.currentSpriteImg;
+    }
+
+    // Keep the player fully inside the world.
+    const minimumPlayerX = 0;
+    const maximumPlayerX = world.clientWidth - playerWidth;
+    const minimumPlayerY = 0;
+    const maximumPlayerY = world.clientHeight - playerHeight;
+
+    if (player.x < minimumPlayerX) player.x = minimumPlayerX;
+    if (player.x > maximumPlayerX) {
+      player.x = maximumPlayerX;
+    }
+
+    if (player.y < minimumPlayerY) player.y = minimumPlayerY;
+    if (player.y > maximumPlayerY) {
+      player.y = maximumPlayerY;
+    }
+
+    // Position the wrapper and handle the horizontal left-flip transform
+    playerWrapper.style.transform = `translate(${player.x}px, ${player.y}px) scaleX(${shouldFlip ? -1 : 1})`;
+    updateCamera();
+    updateInteractionPrompt();
+  }
+
+  requestAnimationFrame(updateMovement);
 }
 
 requestAnimationFrame(updateMovement);
 
-// question and answer system!
+// ============================================================================
+// SECTION 6: KANA DATA & PROGRESSION STATE
+// ============================================================================
+
 const kanaBank = [
-    { romaji: "a", hiragana: "あ", katakana: "ア" },
-    { romaji: "i", hiragana: "い", katakana: "イ" },
-    { romaji: "u", hiragana: "う", katakana: "ウ" },
-    { romaji: "e", hiragana: "え", katakana: "エ" },
-    { romaji: "o", hiragana: "お", katakana: "オ" },
-    { romaji: "ka", hiragana: "か", katakana: "カ" },
-    { romaji: "ki", hiragana: "き", katakana: "キ" },
-    { romaji: "ku", hiragana: "く", katakana: "ク" },
-    { romaji: "ke", hiragana: "け", katakana: "ケ" },
-    { romaji: "ko", hiragana: "こ", katakana: "コ" },
-    { romaji: "sa", hiragana: "さ", katakana: "サ" },
-    { romaji: "shi", hiragana: "し", katakana: "シ" },
-    { romaji: "su", hiragana: "す", katakana: "ス" },
-    { romaji: "se", hiragana: "せ", katakana: "セ" },
-    { romaji: "so", hiragana: "そ", katakana: "ソ" },
-    { romaji: "ta", hiragana: "た", katakana: "タ" },
-    { romaji: "chi", hiragana: "ち", katakana: "チ" },
-    { romaji: "tsu", hiragana: "つ", katakana: "ツ" },
-    { romaji: "te", hiragana: "て", katakana: "テ" },
-    { romaji: "to", hiragana: "と", katakana: "ト" },
-    { romaji: "na", hiragana: "な", katakana: "ナ" },
-    { romaji: "ni", hiragana: "に", katakana: "ニ" },
-    { romaji: "nu", hiragana: "ぬ", katakana: "ヌ" },
-    { romaji: "ne", hiragana: "ね", katakana: "ネ" },
-    { romaji: "no", hiragana: "の", katakana: "ノ" },
-    { romaji: "ha", hiragana: "は", katakana: "ハ" },
-    { romaji: "hi", hiragana: "ひ", katakana: "ヒ" },
-    { romaji: "fu", hiragana: "ふ", katakana: "フ" },
-    { romaji: "he", hiragana: "へ", katakana: "ヘ" },
-    { romaji: "ho", hiragana: "ほ", katakana: "ホ" },   
-    { romaji: "ma", hiragana: "ま", katakana: "マ" },
-    { romaji: "mi", hiragana: "み", katakana: "ミ" },
-    { romaji: "mu", hiragana: "む", katakana: "ム" },
-    { romaji: "me", hiragana: "め", katakana: "メ" },
-    { romaji: "mo", hiragana: "も", katakana: "モ" },
-    { romaji: "ya", hiragana: "や", katakana: "ヤ" },
-    { romaji: "yu", hiragana: "ゆ", katakana: "ユ" },
-    { romaji: "yo", hiragana: "よ", katakana: "ヨ" },
-    { romaji: "ra", hiragana: "ら", katakana: "ラ" },
-    { romaji: "ri", hiragana: "り", katakana: "リ" },
-    { romaji: "ru", hiragana: "る", katakana: "ル" },
-    { romaji: "re", hiragana: "れ", katakana: "レ" },
-    { romaji: "ro", hiragana: "ろ", katakana: "ロ" },
-    { romaji: "wa", hiragana: "わ", katakana: "ワ" },
-    { romaji: "wo", hiragana: "を", katakana: "ヲ" },
-    { romaji: "n", hiragana: "ん", katakana: "ン" }
+  { romaji: "a", hiragana: "あ", katakana: "ア" },
+  { romaji: "i", hiragana: "い", katakana: "イ" },
+  { romaji: "u", hiragana: "う", katakana: "ウ" },
+  { romaji: "e", hiragana: "え", katakana: "エ" },
+  { romaji: "o", hiragana: "お", katakana: "オ" },
+  { romaji: "ka", hiragana: "か", katakana: "カ" },
+  { romaji: "ki", hiragana: "き", katakana: "キ" },
+  { romaji: "ku", hiragana: "く", katakana: "ク" },
+  { romaji: "ke", hiragana: "け", katakana: "ケ" },
+  { romaji: "ko", hiragana: "こ", katakana: "コ" },
+  { romaji: "sa", hiragana: "さ", katakana: "サ" },
+  { romaji: "shi", hiragana: "し", katakana: "シ" },
+  { romaji: "su", hiragana: "す", katakana: "ス" },
+  { romaji: "se", hiragana: "せ", katakana: "セ" },
+  { romaji: "so", hiragana: "そ", katakana: "ソ" },
+  { romaji: "ta", hiragana: "た", katakana: "タ" },
+  { romaji: "chi", hiragana: "ち", katakana: "チ" },
+  { romaji: "tsu", hiragana: "つ", katakana: "ツ" },
+  { romaji: "te", hiragana: "て", katakana: "テ" },
+  { romaji: "to", hiragana: "と", katakana: "ト" },
+  { romaji: "na", hiragana: "な", katakana: "ナ" },
+  { romaji: "ni", hiragana: "に", katakana: "ニ" },
+  { romaji: "nu", hiragana: "ぬ", katakana: "ヌ" },
+  { romaji: "ne", hiragana: "ね", katakana: "ネ" },
+  { romaji: "no", hiragana: "の", katakana: "ノ" },
+  { romaji: "ha", hiragana: "は", katakana: "ハ" },
+  { romaji: "hi", hiragana: "ひ", katakana: "ヒ" },
+  { romaji: "fu", hiragana: "ふ", katakana: "フ" },
+  { romaji: "he", hiragana: "へ", katakana: "ヘ" },
+  { romaji: "ho", hiragana: "ほ", katakana: "ホ" },
+  { romaji: "ma", hiragana: "ま", katakana: "マ" },
+  { romaji: "mi", hiragana: "み", katakana: "ミ" },
+  { romaji: "mu", hiragana: "む", katakana: "ム" },
+  { romaji: "me", hiragana: "め", katakana: "メ" },
+  { romaji: "mo", hiragana: "も", katakana: "モ" },
+  { romaji: "ya", hiragana: "や", katakana: "ヤ" },
+  { romaji: "yu", hiragana: "ゆ", katakana: "ユ" },
+  { romaji: "yo", hiragana: "よ", katakana: "ヨ" },
+  { romaji: "ra", hiragana: "ら", katakana: "ラ" },
+  { romaji: "ri", hiragana: "り", katakana: "リ" },
+  { romaji: "ru", hiragana: "る", katakana: "ル" },
+  { romaji: "re", hiragana: "れ", katakana: "レ" },
+  { romaji: "ro", hiragana: "ろ", katakana: "ロ" },
+  { romaji: "wa", hiragana: "わ", katakana: "ワ" },
+  { romaji: "wo", hiragana: "を", katakana: "ヲ" },
+  { romaji: "n", hiragana: "ん", katakana: "ン" }
 ];
 
 let playerLevel = 1;
@@ -363,13 +382,17 @@ let currentEXP = 0;
 let expNeededForLevelUp = 100;
 let totalCorrectAnswers = 0;
 
-let currentQuestion = null;   
-let currentMode = "free";    
-let isGamePaused = false;    
+let currentQuestion = null;
+let currentMode = "free";
+let isGamePaused = false;
 
 let timedCountdownInterval = null;
 let secondsRemaining = 60;
 let timedSessionCorrectCount = 0;
+
+// ============================================================================
+// SECTION 7: QUIZ MODAL - DOM REFERENCES & EVENT LISTENERS
+// ============================================================================
 
 const openBtn = document.getElementById("practice-btn");
 const overlay = document.getElementById("quiz-modal-overlay");
@@ -409,10 +432,10 @@ closeKanaReferenceBtn.addEventListener("click", closeKanaReference);
 document.querySelectorAll(".mode-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     currentMode = btn.dataset.mode;
-    
+
     menuScreen.classList.add("hidden");
     gameScreen.classList.remove("hidden");
-    
+
     // Start specialized clock if Timed Mode is chosen
     if (currentMode === "timed") {
       startTimedPracticeSession();
@@ -421,6 +444,10 @@ document.querySelectorAll(".mode-btn").forEach(btn => {
     }
   });
 });
+
+// ============================================================================
+// SECTION 8: QUIZ MODAL FUNCTIONS
+// ============================================================================
 
 function openQuizModal() {
   overlay.classList.remove("hidden");
@@ -433,7 +460,7 @@ function closeQuizModal() {
   // If player clicks close button while timed mode interval is actively processing...
   if (currentMode === "timed" && timedCountdownInterval !== null && secondsRemaining > 0) {
     const confirmExit = confirm("⚠️ Are you sure you want to exit early? You will not gain any EXP for this session!");
-    
+
     if (!confirmExit) {
       return;
     }
@@ -447,8 +474,8 @@ function closeQuizModal() {
 
   overlay.classList.add("hidden");
   feedbackText.classList.add("hidden");
-  modalTimerBlock.classList.add("hidden"); 
-  isGamePaused = false; 
+  modalTimerBlock.classList.add("hidden");
+  isGamePaused = false;
   updateInteractionPrompt();
   updateHUD();
 }
@@ -506,13 +533,13 @@ function startTimedPracticeSession() {
   timedSessionCorrectCount = 0;
   modalTimerText.textContent = secondsRemaining;
   modalTimerBlock.classList.remove("hidden"); // Render clock panel above question blocks
-  
+
   nextQuestionSession();
-  
+
   timedCountdownInterval = setInterval(() => {
     secondsRemaining--;
     modalTimerText.textContent = secondsRemaining;
-    
+
     if (secondsRemaining <= 0) {
       endTimedPracticeSession();
     }
@@ -522,39 +549,38 @@ function startTimedPracticeSession() {
 function endTimedPracticeSession() {
   clearInterval(timedCountdownInterval);
   timedCountdownInterval = null;
-  modalTimerBlock.classList.add("hidden"); 
+  modalTimerBlock.classList.add("hidden");
   playSfx("timed-mode-end");
 
-  const expGained = timedSessionCorrectCount * 2; 
-  
+  const expGained = timedSessionCorrectCount * 2;
+
   questionText.textContent = "⏱️ Time's Up!";
   feedbackText.classList.remove("hidden");
   feedbackText.className = "correct-msg";
   feedbackText.innerHTML = `Great job! You answered <strong>${timedSessionCorrectCount}</strong> questions correctly.<br>🎉 Gained <strong>+${expGained} EXP</strong>!`;
   choicesContainer.innerHTML = "";
-  
+
   gainEXP(expGained);
-  updateQuestProgress("timed", null, 1);
 
   const menuReturnBtn = document.createElement("button");
   menuReturnBtn.className = "choice-btn";
   menuReturnBtn.textContent = "Return to Menu";
   menuReturnBtn.style.marginTop = "25px";
-  
+
   menuReturnBtn.addEventListener("click", () => {
-    feedbackText.classList.add("hidden"); 
+    feedbackText.classList.add("hidden");
     feedbackText.innerHTML = "";
-    
+
     menuScreen.classList.remove("hidden");
     gameScreen.classList.add("hidden");
   });
-  
+
   choicesContainer.appendChild(menuReturnBtn);
 }
 
 function gainEXP(amount) {
   currentEXP += amount;
-  
+
   while (currentEXP >= expNeededForLevelUp) {
     if (playerLevel >= maxPlayerLevel) {
       currentEXP = 0;
@@ -562,7 +588,7 @@ function gainEXP(amount) {
     }
     currentEXP -= expNeededForLevelUp;
     playerLevel++;
-    expNeededForLevelUp += 20; 
+    expNeededForLevelUp += 20;
     showLevelUpPopup();
   }
   updateHUD();
@@ -608,14 +634,14 @@ document.getElementById("level-up-close-btn").addEventListener("click", () => {
 function generateRandomQuestion() {
   const targetIndex = Math.floor(Math.random() * kanaBank.length);
   const target = kanaBank[targetIndex];
-  
+
   let questionText = "";
   let correctAnswerText = "";
   let wrongChoicesPool = [];
 
   let isHiragana = true;
   if (currentMode === "katakana") isHiragana = false;
-  if (currentMode === "free" || currentMode === "timed") isHiragana = Math.random() < 0.5;  
+  if (currentMode === "free" || currentMode === "timed") isHiragana = Math.random() < 0.5;
   const scriptName = isHiragana ? "Hiragana" : "Katakana";
   const kanaChar = isHiragana ? target.hiragana : target.katakana;
 
@@ -624,11 +650,11 @@ function generateRandomQuestion() {
     questionText = `Match the Hiragana character "${target.hiragana}" to its Katakana pair:`;
     correctAnswerText = target.katakana;
     wrongChoicesPool = kanaBank.filter(k => k.romaji !== target.romaji).map(k => k.katakana);
-    
+
   } else {
     // Modes A & B: Sub-split into Identification vs Sound prompts
     const subType = Math.floor(Math.random() * 2);
-    
+
     if (subType === 0) {
       questionText = `What sound does the ${scriptName} character "${kanaChar}" make?`;
       correctAnswerText = target.romaji;
@@ -643,14 +669,14 @@ function generateRandomQuestion() {
   // Shuffle selections array down to exactly 3 wrong items + 1 right choice
   wrongChoicesPool.sort(() => 0.5 - Math.random());
   const finalChoices = [correctAnswerText, wrongChoicesPool[0], wrongChoicesPool[1], wrongChoicesPool[2]];
-  finalChoices.sort(() => 0.5 - Math.random()); 
+  finalChoices.sort(() => 0.5 - Math.random());
 
   return { prompt: questionText, choices: finalChoices, correct: correctAnswerText };
 }
 
 function nextQuestionSession() {
   feedbackText.classList.add("hidden");
-  choicesContainer.innerHTML = ""; 
+  choicesContainer.innerHTML = "";
 
   currentQuestion = generateRandomQuestion();
   questionText.textContent = currentQuestion.prompt;
@@ -666,7 +692,7 @@ function nextQuestionSession() {
 
 function checkKanaAnswer(selectedButton, chosenText) {
   feedbackText.classList.remove("hidden");
-  
+
   // Lock selection choices immediately
   const choiceButtons = choicesContainer.querySelectorAll(".choice-btn");
   choiceButtons.forEach(btn => btn.disabled = true);
@@ -674,12 +700,11 @@ function checkKanaAnswer(selectedButton, chosenText) {
   if (chosenText === currentQuestion.correct) {
     playSfx("correct");
     if (currentMode === "timed") {
-      timedSessionCorrectCount++; 
+      timedSessionCorrectCount++;
     } else {
       totalCorrectAnswers++;
       progressGardenGrowth();
     }
-    updateQuestProgress("questions", null, 1);
     feedbackText.textContent = "✨ Great job! Your answer is correct.";
     feedbackText.className = "correct-msg";
     selectedButton.style.borderColor = "#2e7d32";
@@ -705,11 +730,15 @@ function checkKanaAnswer(selectedButton, chosenText) {
     nextBtn.textContent = "Next Question 👉";
     nextBtn.style.marginTop = "20px";
     nextBtn.style.padding = "10px 20px";
-    nextBtn.className = "choice-btn"; 
+    nextBtn.className = "choice-btn";
     nextBtn.addEventListener("click", nextQuestionSession);
     choicesContainer.appendChild(nextBtn);
   }
 }
+
+// ============================================================================
+// SECTION 9: HUD
+// ============================================================================
 
 // REFRESH STAT DATA COUNTERS
 function updateHUD() {
@@ -718,7 +747,9 @@ function updateHUD() {
   document.getElementById("hud-exp").textContent = `${currentEXP}/${expNeededForLevelUp}`;
 }
 
-// plants n' stuff
+// ============================================================================
+// SECTION 10: GARDEN / PLANTING SYSTEM
+// ============================================================================
 
 // Represents the interactive soil plots on screen
 const dirtTileImages = [
@@ -875,12 +906,10 @@ function harvestCrop(plotId, slotIndex) {
   const plot = gardenPlots.find(currentPlot => currentPlot.id === plotId);
   const plantWrapper = document.querySelector(`.plant-wrapper[data-plot-id="${plotId}"][data-slot-index="${slotIndex}"]`);
   const harvestedKey = `harvested${plant.cropType.charAt(0).toUpperCase()}${plant.cropType.slice(1)}`;
-  const harvestedCropType = plant.cropType;
   plot.plants[slotIndex] = null;
   playerInventory[harvestedKey] = (playerInventory[harvestedKey] || 0) + 1;
   gainEXP(getCropHarvestReward(cropInfo));
   showHarvestEXP(plantWrapper, getCropHarvestReward(cropInfo));
-  updateQuestProgress("harvest", quest => quest.cropId === harvestedCropType, 1);
   nearbyInteraction = null;
   renderGardenPlots();
   renderInventory();
@@ -978,7 +1007,9 @@ function progressGardenGrowth() {
   updateInteractionPrompt();
 }
 
-// shop system
+// ============================================================================
+// SECTION 11: SHOP DATA & INVENTORY SYSTEM
+// ============================================================================
 
 const seedCatalog = {
   // Tier 1: Levels 1-5 | 3 questions each | +1 EXP harvest
@@ -1017,7 +1048,7 @@ const seedCatalog = {
   sunflower: createTierCrop({ id: "sunflower", name: "Sunflower", buyPrice: 29, unlockLevel: 25 })
 };
 
-let playerWallet = 10; 
+let playerWallet = 10;
 let playerInventory = {
   // Seeds available for planting
   wheatSeeds: 0,
@@ -1117,6 +1148,10 @@ inventoryButton.addEventListener("click", toggleInventory);
 
 renderInventory();
 updateHUD();
+
+// ============================================================================
+// SECTION 12: SHOP UI SYSTEM
+// ============================================================================
 
 let currentShopTab = "buy"; // 'buy' or 'sell'
 const buyQuantities = {};
@@ -1251,7 +1286,7 @@ function updateShopUI() {
         updateShopUI();
       });
       buyActionBtn.addEventListener("click", () => buySeedItem(crop, buyQuantity));
-      
+
     } else {
       // --- SELL TAB INTERFACE ---
       const ownedCrops = getHarvestedCropCount(crop);
@@ -1263,7 +1298,7 @@ function updateShopUI() {
         <p>In Bag: ${ownedCrops}</p>
         <button class="shop-action-btn shop-sell-action-btn">${hasSellPrice ? "Sell 1" : "Locked"}</button>
       `;
-      
+
       const sellActionBtn = card.querySelector("button");
       if (!hasSellPrice || ownedCrops <= 0) sellActionBtn.disabled = true; // Disable un-configured crops or empty inventory
       sellActionBtn.addEventListener("click", () => sellCropItem(crop));
@@ -1319,238 +1354,9 @@ function sellCropItem(crop) {
   }
 }
 
-// quest system
-
-const questSlotCount = 3;
-const questsContainer = document.getElementById("quests-container");
-let activeQuests = [null, null, null];
-
-// Quest tier climbs with player level, the same way crop tiers do, and
-// controls both the size of quest targets and the size of their rewards.
-function getQuestTier() {
-  return Math.min(5, Math.max(1, Math.ceil(playerLevel / 5)));
-}
-
-function getUnlockedCrops() {
-  return Object.values(seedCatalog).filter(crop => Number.isFinite(crop.unlockLevel) && crop.unlockLevel <= playerLevel);
-}
-
-function makeQuestId() {
-  return `quest-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
-}
-
-// Rewards scale with tier: higher tiers roll bigger coin/EXP ranges.
-function rollQuestReward(tier) {
-  const rewardIsCoins = Math.random() < 0.5;
-
-  if (rewardIsCoins) {
-    const minCoins = tier * 10;
-    const maxCoins = tier * 20;
-    return { type: "coins", amount: minCoins + Math.floor(Math.random() * (maxCoins - minCoins + 1)) };
-  }
-
-  const minExp = tier * 5;
-  const maxExp = tier * 12;
-  return { type: "exp", amount: minExp + Math.floor(Math.random() * (maxExp - minExp + 1)) };
-}
-
-function createHarvestQuest(tier) {
-  const unlockedCrops = getUnlockedCrops();
-  if (unlockedCrops.length === 0) return null;
-
-  const crop = unlockedCrops[Math.floor(Math.random() * unlockedCrops.length)];
-  const target = tier + Math.floor(Math.random() * 3) + 2; // e.g. tier 1 -> 3-5
-
-  return {
-    id: makeQuestId(),
-    type: "harvest",
-    cropId: crop.id,
-    title: `${crop.name} Harvesting`,
-    description: `Harvest ${target} ${crop.name}`,
-    progress: 0,
-    target,
-    reward: rollQuestReward(tier),
-    tier
-  };
-}
-
-function createQuestionsQuest(tier) {
-  const target = tier * 5 + Math.floor(Math.random() * 6); // e.g. tier 1 -> 5-10
-
-  return {
-    id: makeQuestId(),
-    type: "questions",
-    title: "Kana Practice",
-    description: `Answer ${target} questions`,
-    progress: 0,
-    target,
-    reward: rollQuestReward(tier),
-    tier
-  };
-}
-
-function createTimedQuest(tier) {
-  const target = Math.min(5, Math.max(1, Math.ceil(tier / 2) + Math.floor(Math.random() * 2))); // 1-3ish sessions
-
-  return {
-    id: makeQuestId(),
-    type: "timed",
-    title: "Timed Practice",
-    description: `Finish ${target} timed session${target > 1 ? "s" : ""}`,
-    progress: 0,
-    target,
-    reward: rollQuestReward(tier),
-    tier
-  };
-}
-
-// Builds one fresh quest, picking randomly among the three quest families:
-// harvesting (reflecting only crops the player currently has unlocked),
-// kana practice (regular questions), and timed practice sessions.
-// `excludeTypes` lets callers avoid handing back a type that's already
-// active elsewhere, so the 3 quest slots stay varied like the wireframe.
-function generateQuest(excludeTypes = []) {
-  const tier = getQuestTier();
-  const questBuilders = {
-    harvest: () => createHarvestQuest(tier),
-    questions: () => createQuestionsQuest(tier),
-    timed: () => createTimedQuest(tier)
-  };
-
-  const preferredTypes = Object.keys(questBuilders).filter(type => !excludeTypes.includes(type));
-  const typesToTry = preferredTypes.length > 0 ? preferredTypes : Object.keys(questBuilders);
-
-  // Try types in a random order in case the first pick can't produce a quest yet
-  // (e.g. a harvest quest with no unlocked crops, which shouldn't normally happen).
-  const shuffledTypes = [...typesToTry].sort(() => 0.5 - Math.random());
-  for (const type of shuffledTypes) {
-    const quest = questBuilders[type]();
-    if (quest) return quest;
-  }
-
-  // Last-resort fallback across every type.
-  const allTypesShuffled = Object.keys(questBuilders).sort(() => 0.5 - Math.random());
-  for (const type of allTypesShuffled) {
-    const quest = questBuilders[type]();
-    if (quest) return quest;
-  }
-
-  return createQuestionsQuest(tier);
-}
-
-function renderQuestCard(quest) {
-  const card = document.createElement("div");
-  card.className = "quest-card";
-  card.dataset.questId = quest.id;
-
-  const isComplete = quest.progress >= quest.target;
-  const rewardLabel = quest.reward.type === "coins" ? `${quest.reward.amount}g` : `${quest.reward.amount}xp`;
-  const clampedProgress = Math.min(quest.progress, quest.target);
-
-  card.innerHTML = `
-    <div class="quest-info">
-      <span class="quest-title">${quest.title}</span>
-      <span class="quest-description">${quest.description}</span>
-      <span class="quest-progress">Progress: ${clampedProgress}/${quest.target}</span>
-    </div>
-    <div class="quest-action">
-      <button type="button" class="quest-check-btn${isComplete ? " completed" : ""}"
-        aria-label="${isComplete ? `Claim reward for ${quest.title}` : `${quest.title} in progress`}">
-        <span class="quest-check-icon">✓</span>
-      </button>
-      <span class="quest-reward">Reward: ${rewardLabel}</span>
-    </div>
-  `;
-
-  card.querySelector(".quest-check-btn").addEventListener("click", () => claimQuest(quest.id));
-
-  return card;
-}
-
-function renderQuests() {
-  questsContainer.innerHTML = "";
-
-  const hasAnyQuest = activeQuests.some(Boolean);
-  if (!hasAnyQuest) {
-    questsContainer.innerHTML = '<p class="quests-empty-message">No quests available right now.</p>';
-    return;
-  }
-
-  activeQuests.forEach(quest => {
-    if (quest) questsContainer.appendChild(renderQuestCard(quest));
-  });
-
-  // Keep the collapsible panel's max-height in sync if it's currently open.
-  if (questContent.classList.contains("is-open")) {
-    questContent.style.maxHeight = `${questContent.scrollHeight}px`;
-  }
-}
-
-// Claiming a completed quest pays out its reward, fades the card out,
-// then replaces it with a freshly generated quest that fades back in.
-function claimQuest(questId) {
-  const questIndex = activeQuests.findIndex(quest => quest && quest.id === questId);
-  if (questIndex === -1) return;
-
-  const quest = activeQuests[questIndex];
-  if (quest.progress < quest.target) return;
-
-  if (quest.reward.type === "coins") {
-    playerWallet += quest.reward.amount;
-    updateHUD();
-  } else {
-    gainEXP(quest.reward.amount);
-  }
-  playSfx("quest-complete");
-
-  const cardElement = questsContainer.querySelector(`.quest-card[data-quest-id="${questId}"]`);
-  const replaceQuest = () => {
-    const otherActiveTypes = activeQuests
-      .filter((otherQuest, otherIndex) => otherIndex !== questIndex && otherQuest)
-      .map(otherQuest => otherQuest.type);
-    activeQuests[questIndex] = generateQuest(otherActiveTypes);
-    renderQuests();
-    saveGameState();
-  };
-
-  if (cardElement) {
-    cardElement.classList.add("quest-fade-out");
-    cardElement.addEventListener("transitionend", replaceQuest, { once: true });
-    // Fallback in case the transition event doesn't fire (e.g. reduced motion settings).
-    setTimeout(replaceQuest, 450);
-  } else {
-    replaceQuest();
-  }
-}
-
-// Advances progress on every active quest of a given type that matches an
-// optional filter (used so harvest progress only applies to the matching crop).
-function updateQuestProgress(type, matcher, amount = 1) {
-  let didChange = false;
-
-  activeQuests.forEach(quest => {
-    if (!quest || quest.type !== type) return;
-    if (matcher && !matcher(quest)) return;
-    if (quest.progress >= quest.target) return;
-
-    quest.progress = Math.min(quest.target, quest.progress + amount);
-    didChange = true;
-  });
-
-  if (didChange) renderQuests();
-  if (didChange) saveGameState();
-}
-
-function initQuests() {
-  activeQuests = [];
-  for (let slotIndex = 0; slotIndex < questSlotCount; slotIndex++) {
-    const usedTypes = activeQuests.map(quest => quest && quest.type).filter(Boolean);
-    activeQuests.push(generateQuest(usedTypes));
-  }
-  renderQuests();
-}
-
-initQuests();
+// ============================================================================
+// SECTION 13: SAVE / LOAD SYSTEM
+// ============================================================================
 
 function saveGameState() {
   const gameState = {
@@ -1559,17 +1365,14 @@ function saveGameState() {
     expNeededForLevelUp,
     playerWallet,
     playerInventory,
-    gardenPlots,
-    activeQuests,
-    musicVolume: Number(musicSlider.value),
-    sfxVolume: Number(sfxSlider.value)
+    gardenPlots
   };
   localStorage.setItem("kanaGardenGameState", JSON.stringify(gameState));
   console.log("Game state saved.");
 }
 
 function autosave() {
-  setInterval(saveGameState, 30000); 
+  setInterval(saveGameState, 180000);
 }
 
 function loadGameState() {
@@ -1583,24 +1386,9 @@ function loadGameState() {
       playerWallet = gameState.playerWallet || 10;
       playerInventory = gameState.playerInventory || {};
       gardenPlots = gameState.gardenPlots || [createGardenPlot(1)];
-      if (Array.isArray(gameState.activeQuests) && gameState.activeQuests.length === questSlotCount) {
-        activeQuests = gameState.activeQuests;
-      }
-      if (Number.isFinite(gameState.musicVolume)) {
-        musicSlider.value = Math.max(0, Math.min(100, gameState.musicVolume));
-        backgroundMusic.volume = Number(musicSlider.value) / 100;
-      }
-      if (Number.isFinite(gameState.sfxVolume)) {
-        sfxSlider.value = Math.max(0, Math.min(100, gameState.sfxVolume));
-        const sfxVolume = Number(sfxSlider.value) / 100;
-        Object.values(sfxAudioMap).forEach(audio => {
-          audio.volume = sfxVolume;
-        });
-      }
       updateHUD();
       renderGardenPlots();
       renderInventory();
-      renderQuests();
       console.log("Game state loaded.");
     } catch (error) {
       console.error("Failed to load game state:", error);
