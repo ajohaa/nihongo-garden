@@ -985,7 +985,7 @@ img {
 /* Collapsible container hidden by default */
 .collapsible-content {
   border-radius: 15px;
-  border: 3px solid #d28c41;
+  border: none;
   position: absolute;
   top: 110px;
   left: 20px;
@@ -1004,6 +1004,7 @@ img {
 }
 
 .quests-container {
+  border: 3px solid #d28c41;
   border-radius: 15px;
   display: flex;
   flex-direction: column;
