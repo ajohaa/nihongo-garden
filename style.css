@@ -94,16 +94,16 @@ img {
   }
 
   #plots-container .plot-row {
-    grid-template-columns: repeat(2, 110px);
-    grid-template-rows: repeat(3, 110px);
-    column-gap: 80px;
-    row-gap: 60px;
+    grid-template-columns: repeat(2, 120px);
+    grid-template-rows: repeat(3, 120px);
+    column-gap: 45px;
+    row-gap: 45px;
   }
 
   #plots-container .plot-slot,
   #plots-container .garden-plot {
-    width: 110px;
-    height: 110px;
+    width: 150px;
+    height: 150px;
   }
 }
 
@@ -259,6 +259,43 @@ img {
 
 #practice-btn:hover {
   background-color: #45a049;
+}
+
+#joystick-ring {
+  position: absolute;
+  display: none;
+  bottom: 100px;
+  left: 20px;
+  width: 104px;
+  aspect-ratio: 1;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  background-color: rgba(38, 50, 56, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 0 0 2px rgba(38, 50, 56, 0.35);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+#joystick-knob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 38px;
+  aspect-ratio: 1;
+  border: 2px solid #263238;
+  border-radius: 50%;
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+  transform: translate(-50%, -50%) translate(var(--offset-x, 0px), var(--offset-y, 0px));
+  transition: transform 180ms ease-out;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+}
+
+#joystick-knob.is-dragging {
+  transition: none;
+  cursor: grabbing;
 }
 
 #kana-reference-btn {
@@ -465,6 +502,10 @@ img {
 }
 
 @media (max-width: 900px) {
+  #joystick-ring {
+    display: block;
+  }
+
   #plots-container {
     width: min(90vw, 310px);
     left: 50%;
@@ -473,16 +514,16 @@ img {
   }
 
   #plots-container .plot-row {
-    grid-template-columns: repeat(2, 110px);
-    grid-template-rows: repeat(3, 110px);
+    grid-template-columns: repeat(2, 150px);
+    grid-template-rows: repeat(3, 150px);
     column-gap: 80px;
     row-gap: 60px;
   }
 
   #plots-container .plot-slot,
   #plots-container .garden-plot {
-    width: 110px;
-    height: 110px;
+    width: 150px;
+    height: 150px;
   }
 }
 
@@ -495,16 +536,16 @@ img {
   }
 
   #plots-container .plot-row {
-    grid-template-columns: repeat(2, 100px);
-    grid-template-rows: repeat(3, 100px);
-    column-gap: 72px;
-    row-gap: 52px;
+    grid-template-columns: repeat(2, 130px);
+    grid-template-rows: repeat(3, 130px);
+    column-gap: 70px;
+    row-gap: 50px;
   }
 
   #plots-container .plot-slot,
   #plots-container .garden-plot {
-    width: 100px;
-    height: 100px;
+    width: 130px;
+    height: 130px;
   }
 }
 

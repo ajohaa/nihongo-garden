@@ -4,7 +4,7 @@
 
 // state tracker for 4 primary movement keys (arrow keys and WASD)
 const movement = {
-    up: false,
+    up: false, 
     down: false,
     left: false,
     right: false
@@ -138,6 +138,52 @@ const playerAnimations = {
 // PLAYER & MOVEMENT
 // ============================================================
 
+const joystickRing = document.getElementById("joystick-ring");
+const joystick = document.getElementById("joystick-knob");
+let isDraggingJoystick = false;
+let joystickX = 0;
+let joystickY = 0;
+
+joystick.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  isDraggingJoystick = true;
+  joystick.classList.add("is-dragging");
+  joystick.setPointerCapture(event.pointerId);
+});
+
+joystick.addEventListener("pointermove", (event) => {
+  if (!isDraggingJoystick) return;
+
+  const ringBounds = joystickRing.getBoundingClientRect();
+  const maximumOffset = (ringBounds.width - joystick.offsetWidth) / 2;
+  let offsetX = event.clientX - (ringBounds.left + ringBounds.width / 2);
+  let offsetY = event.clientY - (ringBounds.top + ringBounds.height / 2);
+  const distance = Math.hypot(offsetX, offsetY);
+
+  if (distance > maximumOffset) {
+    const scale = maximumOffset / distance;
+    offsetX *= scale;
+    offsetY *= scale;
+  }
+
+  joystick.style.setProperty("--offset-x", `${offsetX}px`);
+  joystick.style.setProperty("--offset-y", `${offsetY}px`);
+  joystickX = offsetX / maximumOffset;
+  joystickY = offsetY / maximumOffset;
+});
+
+function centerJoystick() {
+  isDraggingJoystick = false;
+  joystickX = 0;
+  joystickY = 0;
+  joystick.classList.remove("is-dragging");
+  joystick.style.setProperty("--offset-x", "0px");
+  joystick.style.setProperty("--offset-y", "0px");
+}
+
+joystick.addEventListener("pointerup", centerJoystick);
+joystick.addEventListener("pointercancel", centerJoystick);
+
 // player physics & rendering state
 const mainScene = document.getElementById("main-scene");
 const world = document.getElementById("world");
@@ -219,20 +265,13 @@ function updateMovement() {
         requestAnimationFrame(updateMovement);
         return; 
     }
-    let dx = 0;
-    let dy = 0;
+    let dx = Number(movement.right) - Number(movement.left) + joystickX;
+    let dy = Number(movement.down) - Number(movement.up) + joystickY;
 
-    // check mapped directions
-    if (movement.left) dx = -1;
-    if (movement.right) dx = 1;
-    if (movement.up) dy = -1;
-    if (movement.down) dy = 1;
-
-    // if moving diagonally, total speed increases by ~41% (pythagorean theorem)
-    // divide by Math.sqrt(2) to keep diagonal speed exactly the same as straight speed
-    if (dx !== 0 && dy !== 0) {
-        dx *= 0.7071;
-        dy *= 0.7071;
+    const movementMagnitude = Math.hypot(dx, dy);
+    if (movementMagnitude > 1) {
+      dx /= movementMagnitude;
+      dy /= movementMagnitude;
     }
 
     // resolve each axis independently so the player can slide along plot edges
@@ -247,15 +286,15 @@ function updateMovement() {
     let currentSpriteImg = '';
 
     if (isMoving) {
-    // determine the absolute facing angle vs the available right-side asset angle
-    if (movement.up && movement.right)       { lastAngle = '45';  lookupAngle = '45';  shouldFlip = false; }
-    else if (movement.up && movement.left)   { lastAngle = '315'; lookupAngle = '45';  shouldFlip = true;  }
-    else if (movement.down && movement.right){ lastAngle = '135'; lookupAngle = '135'; shouldFlip = false; }
-    else if (movement.down && movement.left) { lastAngle = '225'; lookupAngle = '135'; shouldFlip = true;  }
-    else if (movement.up)                    { lastAngle = '0';   lookupAngle = '0';   shouldFlip = false; }
-    else if (movement.down)                  { lastAngle = '180'; lookupAngle = '180'; shouldFlip = false; }
-    else if (movement.right)                 { lastAngle = '90';  lookupAngle = '90';  shouldFlip = false; }
-    else if (movement.left)                  { lastAngle = '270'; lookupAngle = '90';  shouldFlip = true;  }
+        const facingAngle = (Math.round(Math.atan2(dx, -dy) * 180 / Math.PI / 45) * 45 + 360) % 360;
+        lastAngle = String(facingAngle);
+
+        if (facingAngle === 45 || facingAngle === 315) lookupAngle = '45';
+        else if (facingAngle === 135 || facingAngle === 225) lookupAngle = '135';
+        else if (facingAngle === 90 || facingAngle === 270) lookupAngle = '90';
+        else lookupAngle = lastAngle;
+
+        shouldFlip = facingAngle === 225 || facingAngle === 270 || facingAngle === 315;
 
         animationTimer++;
         if (animationTimer >= ANIMATION_SPEED) {
