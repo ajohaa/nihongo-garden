@@ -640,7 +640,7 @@ img {
   font-size: 18px;
   font-weight: bold;
   margin-bottom: 20px;
-  color: #333;
+  color: #573c34;
 }
 
 /* Choices Grid Layout */
@@ -678,16 +678,16 @@ img {
   font-size: 22px;
   font-weight: bold;
   color: #fff;
-  background-color: #bd804c;
-  border: 2px solid #bd804c;
+  background-color: #d28c41;
+  border: 2px solid #b5732e;
   border-radius: 13px;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .mode-btn:hover {
-  background-color: #d09a68;
-  border-color: #d09a68;
+  background-color: #e0a25a;
+  border-color: #d28c41;
   transform: translateY(-2px);
 }
 
