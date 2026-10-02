@@ -466,6 +466,7 @@ const closeKanaReferenceBtn = document.getElementById("close-kana-reference-btn"
 const kanaReferenceGrid = document.getElementById("kana-reference-grid");
 const closeBtn = document.getElementById("close-modal-btn");
 const menuScreen = document.getElementById("mode-selection-menu");
+const casualMenuScreen = document.getElementById("casual-practice-menu");
 const gameScreen = document.getElementById("question-gameplay-screen");
 const questionText = document.getElementById("question-text");
 const choicesContainer = document.getElementById("choices-container");
@@ -508,12 +509,21 @@ openBtn.addEventListener("click", openQuizModal);
 closeBtn.addEventListener("click", closeQuizModal);
 kanaReferenceBtn.addEventListener("click", openKanaReference);
 closeKanaReferenceBtn.addEventListener("click", closeKanaReference);
+document.getElementById("casual-practice-btn").addEventListener("click", () => {
+  menuScreen.classList.add("hidden");
+  casualMenuScreen.classList.remove("hidden");
+});
+document.getElementById("casual-back-btn").addEventListener("click", () => {
+  casualMenuScreen.classList.add("hidden");
+  menuScreen.classList.remove("hidden");
+});
 
-document.querySelectorAll(".mode-btn").forEach(btn => {
+document.querySelectorAll("[data-mode]").forEach(btn => {
   btn.addEventListener("click", () => {
     currentMode = btn.dataset.mode;
     
     menuScreen.classList.add("hidden");
+    casualMenuScreen.classList.add("hidden");
     gameScreen.classList.remove("hidden");
     
     // start specialized clock if timed mode is chosen
@@ -529,6 +539,7 @@ function openQuizModal() {
   closeAllPopups();
   overlay.classList.remove("hidden");
   menuScreen.classList.remove("hidden"); // always route back to choice center
+  casualMenuScreen.classList.add("hidden");
   gameScreen.classList.add("hidden");
   isGamePaused = true; // signals character movement updates to halt execution
 }
@@ -652,6 +663,7 @@ function endTimedPracticeSession() {
     feedbackText.innerHTML = "";
     
     menuScreen.classList.remove("hidden");
+    casualMenuScreen.classList.add("hidden");
     gameScreen.classList.add("hidden");
   });
   
