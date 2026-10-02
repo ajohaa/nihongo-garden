@@ -27,9 +27,6 @@ function isTextInput(target) {
 const backgroundMusic = document.getElementById("background-music");
 const musicSlider = document.getElementById("music-slider");
 const sfxSlider = document.getElementById("sfx-slider");
-const fontPixelationSlider = document.getElementById("font-pixelation-slider");
-const fontFamilies = ["m-plus-rounded-2c", "jjminiarcade", "cofo-sans-pixel"];
-const fontPixelationLabels = ["None", "Medium", "More"];
 let musicStarted = false;
 let resumeMusicWhenVisible = false;
 const sfxAudioMap = {};
@@ -47,17 +44,6 @@ questsToggle.addEventListener("click", () => {
 });
 
 backgroundMusic.volume = Number(musicSlider.value) / 100;
-
-function applyFontPixelation() {
-  const level = Number(fontPixelationSlider.value);
-  const fontFamily = fontFamilies[level] || fontFamilies[1];
-  const label = fontPixelationLabels[level] || fontPixelationLabels[1];
-  document.documentElement.style.setProperty("--ui-font-family", `"${fontFamily}"`);
-  document.documentElement.classList.toggle("font-pixelation-more", level === 2);
-  fontPixelationSlider.setAttribute("aria-valuetext", label);
-}
-
-applyFontPixelation();
 
 function renderTextWithKana(element, text) {
   element.replaceChildren();
@@ -124,11 +110,6 @@ sfxSlider.addEventListener("input", () => {
   Object.values(sfxAudioMap).forEach(audio => {
     audio.volume = volume;
   });
-  saveGameState();
-});
-
-fontPixelationSlider.addEventListener("input", () => {
-  applyFontPixelation();
   saveGameState();
 });
 
@@ -1791,8 +1772,7 @@ function saveGameState() {
     gardenPlots,
     activeQuests,
     musicVolume: Number(musicSlider.value),
-    sfxVolume: Number(sfxSlider.value),
-    fontPixelation: Number(fontPixelationSlider.value)
+    sfxVolume: Number(sfxSlider.value)
   };
   localStorage.setItem("kanaGardenGameState", JSON.stringify(gameState));
   console.log("Game state saved.");
@@ -1826,10 +1806,6 @@ function loadGameState() {
         Object.values(sfxAudioMap).forEach(audio => {
           audio.volume = sfxVolume;
         });
-      }
-      if (Number.isFinite(gameState.fontPixelation)) {
-        fontPixelationSlider.value = Math.max(0, Math.min(2, Math.round(gameState.fontPixelation)));
-        applyFontPixelation();
       }
       updateHUD();
       renderGardenPlots();
