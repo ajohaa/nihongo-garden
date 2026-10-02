@@ -1663,7 +1663,9 @@ function claimQuest(questId) {
 
   const cardElement = questsContainer.querySelector(`.quest-card[data-quest-id="${questId}"]`);
   let didReplace = false;
+  let didStartFadeOut = false;
   let replacementTimer;
+  let shimmerTimer;
   const replaceQuest = (event) => {
     if (didReplace || (event && event.propertyName !== "opacity")) return;
     didReplace = true;
@@ -1688,11 +1690,23 @@ function claimQuest(questId) {
     saveGameState();
   };
 
-  if (cardElement) {
+  const startFadeOut = (event) => {
+    if (didStartFadeOut || (event && event.animationName !== "quest-claim-shimmer")) return;
+    didStartFadeOut = true;
+    clearTimeout(shimmerTimer);
+    cardElement.removeEventListener("animationend", startFadeOut);
+    cardElement.classList.remove("quest-claim-shimmer");
     cardElement.classList.add("quest-fade-out");
     cardElement.addEventListener("transitionend", replaceQuest);
-    // fallback in case the transition event doesn't fire (e.g. reduced motion settings).
+    // fallback in case the transition event doesn't fire.
     replacementTimer = setTimeout(replaceQuest, 450);
+  };
+
+  if (cardElement) {
+    cardElement.classList.add("quest-claim-shimmer");
+    cardElement.addEventListener("animationend", startFadeOut);
+    // fallback in case the shimmer animation doesn't fire.
+    shimmerTimer = setTimeout(startFadeOut, 750);
   } else {
     replaceQuest();
   }
