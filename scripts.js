@@ -1226,6 +1226,7 @@ updateHUD();
 
 let currentShopTab = "buy"; // 'buy' or 'sell'
 const buyQuantities = {};
+const sellQuantities = {};
 
 const shopOpenBtn = document.getElementById("shop-btn");
 const shopOverlay = document.getElementById("shop-modal-overlay");
@@ -1330,6 +1331,7 @@ function updateShopUI() {
       card.innerHTML = `
       <img src="crops, seeds, signs, items/${crop.id}-seeds.png" alt="${crop.name} Seed" style="width: 80px; height: 80px; object-fit: contain; image-rendering: pixelated;">
         <h3>${crop.name} Seed</h3>
+        <h4>Takes ${crop.requiredQuestions} questions to mature</h4>
         <p>Price: ${hasBuyPrice ? `${crop.buyPrice} 🪙` : "Unavailable"}</p>
         <p>Owned: ${ownedSeeds}</p>
         <div class="buy-quantity-controls">
@@ -1363,17 +1365,35 @@ function updateShopUI() {
       // --- SELL TAB INTERFACE ---
       const ownedCrops = getHarvestedCropCount(crop);
       const hasSellPrice = Number.isFinite(crop.sellPrice);
+      const sellQuantity = sellQuantities[crop.id] || 1;
       card.innerHTML = `
         <img src="crops, seeds, signs, items/${crop.id}-item.png" alt="${crop.name} Crop" style="width: 80px; height: 80px; object-fit: contain; image-rendering: pixelated;">
         <h3>${crop.name.replace(" Seed", "")}</h3>
         <p>Value: ${hasSellPrice ? `${crop.sellPrice} 🪙` : "Unavailable"}</p>
         <p>In Bag: ${ownedCrops}</p>
-        <button class="shop-action-btn shop-sell-action-btn">${hasSellPrice ? "Sell 1" : "Locked"}</button>
+        <div class="buy-quantity-controls">
+          <button class="quantity-btn" type="button" aria-label="Decrease sale quantity">-</button>
+          <button class="shop-action-btn shop-sell-action-btn">${hasSellPrice ? `Sell ${sellQuantity}` : "Locked"}</button>
+          <button class="quantity-btn" type="button" aria-label="Increase sale quantity">+</button>
+        </div>
       `;
-      
-      const sellActionBtn = card.querySelector("button");
-      if (!hasSellPrice || ownedCrops <= 0) sellActionBtn.disabled = true; // disable un-configured crops or empty inventory
-      sellActionBtn.addEventListener("click", () => sellCropItem(crop));
+
+      const decreaseQuantityBtn = card.querySelector(".quantity-btn");
+      const sellActionBtn = card.querySelector(".shop-sell-action-btn");
+      const increaseQuantityBtn = card.querySelectorAll(".quantity-btn")[1];
+      const canSell = hasSellPrice && ownedCrops >= sellQuantity;
+      decreaseQuantityBtn.disabled = sellQuantity <= 1 || !canSell;
+      sellActionBtn.disabled = !canSell;
+      increaseQuantityBtn.disabled = !hasSellPrice || sellQuantity >= ownedCrops;
+      decreaseQuantityBtn.addEventListener("click", () => {
+        sellQuantities[crop.id] = Math.max(1, sellQuantity - 1);
+        updateShopUI();
+      });
+      increaseQuantityBtn.addEventListener("click", () => {
+        sellQuantities[crop.id] = Math.min(ownedCrops, sellQuantity + 1);
+        updateShopUI();
+      });
+      sellActionBtn.addEventListener("click", () => sellCropItem(crop, sellQuantity));
     }
 
     itemsContainer.appendChild(card);
@@ -1415,11 +1435,13 @@ function buySeedItem(crop, quantity = 1) {
   }
 }
 
-function sellCropItem(crop) {
+function sellCropItem(crop, quantity = 1) {
   const cropKey = `harvested${crop.id.charAt(0).toUpperCase() + crop.id.slice(1)}`;
-  if (Number.isFinite(crop.sellPrice) && playerInventory[cropKey] > 0) {
-    playerInventory[cropKey]--;
-    playerWallet += crop.sellPrice;
+  if (Number.isFinite(crop.sellPrice) && Number.isInteger(quantity) && quantity > 0
+    && playerInventory[cropKey] >= quantity) {
+    playerInventory[cropKey] -= quantity;
+    playerWallet += crop.sellPrice * quantity;
+    sellQuantities[crop.id] = 1;
     updateHUD();
     renderInventory();
     updateInteractionPrompt();

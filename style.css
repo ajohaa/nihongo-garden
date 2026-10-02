@@ -933,6 +933,13 @@ img {
   font-size: 20px;
   color: #333;
 }
+
+.shop-card h4 {
+  margin: 0;
+  font-size: 16px;
+  color: #666;
+}
+
 .shop-card p {
   margin: 0;
   font-size: 20px;
