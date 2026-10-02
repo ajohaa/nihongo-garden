@@ -28,6 +28,7 @@ const backgroundMusic = document.getElementById("background-music");
 const musicSlider = document.getElementById("music-slider");
 const sfxSlider = document.getElementById("sfx-slider");
 let musicStarted = false;
+let resumeMusicWhenVisible = false;
 const sfxAudioMap = {};
 const questsToggle = document.querySelector(".quests-toggle");
 const questsToggleIcon = questsToggle.querySelector(".quests-toggle-icon");
@@ -43,6 +44,17 @@ questsToggle.addEventListener("click", () => {
 });
 
 backgroundMusic.volume = Number(musicSlider.value) / 100;
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    resumeMusicWhenVisible = !backgroundMusic.paused;
+    if (resumeMusicWhenVisible) backgroundMusic.pause();
+  } else if (resumeMusicWhenVisible) {
+    backgroundMusic.play().catch(() => {
+    });
+    resumeMusicWhenVisible = false;
+  }
+});
 
 function startBackgroundMusic() {
   if (musicStarted) return;
@@ -274,9 +286,12 @@ function updateMovement() {
       dy /= movementMagnitude;
     }
 
+    const movementScale = Math.max(0.9, Math.min(1, mainScene.clientWidth / 800));
+    const movementSpeed = player.speed * movementScale;
+
     // resolve each axis independently so the player can slide along plot edges
-    const nextX = player.x + dx * player.speed;
-    const nextY = player.y + dy * player.speed;
+    const nextX = player.x + dx * movementSpeed;
+    const nextY = player.y + dy * movementSpeed;
     if (!isPlayerPositionBlocked(nextX, player.y)) player.x = nextX;
     if (!isPlayerPositionBlocked(player.x, nextY)) player.y = nextY;
 
@@ -1575,9 +1590,14 @@ function generateQuest(excludeTypes = []) {
 
 // --- quest rendering ---
 
-function renderQuestCard(quest) {
+function renderQuestCard(quest, justCompleted = false) {
   const card = document.createElement("div");
-  card.className = "quest-card";
+  updateQuestCard(card, quest, justCompleted);
+  return card;
+}
+
+function updateQuestCard(card, quest, justCompleted = false) {
+  card.className = `quest-card${justCompleted ? " quest-just-completed" : ""}`;
   card.dataset.questId = quest.id;
 
   const isComplete = quest.progress >= quest.target;
@@ -1600,11 +1620,9 @@ function renderQuestCard(quest) {
   `;
 
   card.querySelector(".quest-check-btn").addEventListener("click", () => claimQuest(quest.id));
-
-  return card;
 }
 
-function renderQuests() {
+function renderQuests(justCompletedIds = []) {
   questsContainer.innerHTML = "";
 
   const hasAnyQuest = activeQuests.some(Boolean);
@@ -1614,7 +1632,7 @@ function renderQuests() {
   }
 
   activeQuests.forEach(quest => {
-    if (quest) questsContainer.appendChild(renderQuestCard(quest));
+    if (quest) questsContainer.appendChild(renderQuestCard(quest, justCompletedIds.includes(quest.id)));
   });
 
   // keep the collapsible panel's max-height in sync if it's currently open.
@@ -1644,20 +1662,37 @@ function claimQuest(questId) {
   playSfx("quest-complete");
 
   const cardElement = questsContainer.querySelector(`.quest-card[data-quest-id="${questId}"]`);
-  const replaceQuest = () => {
+  let didReplace = false;
+  let replacementTimer;
+  const replaceQuest = (event) => {
+    if (didReplace || (event && event.propertyName !== "opacity")) return;
+    didReplace = true;
+    clearTimeout(replacementTimer);
+    cardElement?.removeEventListener("transitionend", replaceQuest);
+
     const otherActiveTypes = activeQuests
       .filter((otherQuest, otherIndex) => otherIndex !== questIndex && otherQuest)
       .map(otherQuest => otherQuest.type);
-    activeQuests[questIndex] = generateQuest(otherActiveTypes);
-    renderQuests();
+    const replacementQuest = generateQuest(otherActiveTypes);
+    activeQuests[questIndex] = replacementQuest;
+
+    if (cardElement) {
+      updateQuestCard(cardElement, replacementQuest);
+      cardElement.classList.add("quest-fade-in");
+      if (questContent.classList.contains("is-open")) {
+        questContent.style.maxHeight = `${questContent.scrollHeight}px`;
+      }
+    } else {
+      renderQuests();
+    }
     saveGameState();
   };
 
   if (cardElement) {
     cardElement.classList.add("quest-fade-out");
-    cardElement.addEventListener("transitionend", replaceQuest, { once: true });
+    cardElement.addEventListener("transitionend", replaceQuest);
     // fallback in case the transition event doesn't fire (e.g. reduced motion settings).
-    setTimeout(replaceQuest, 450);
+    replacementTimer = setTimeout(replaceQuest, 450);
   } else {
     replaceQuest();
   }
@@ -1667,17 +1702,20 @@ function claimQuest(questId) {
 // optional filter (used so harvest progress only applies to the matching crop).
 function updateQuestProgress(type, matcher, amount = 1) {
   let didChange = false;
+  const justCompletedIds = [];
 
   activeQuests.forEach(quest => {
     if (!quest || quest.type !== type) return;
     if (matcher && !matcher(quest)) return;
     if (quest.progress >= quest.target) return;
 
+    const wasIncomplete = quest.progress < quest.target;
     quest.progress = Math.min(quest.target, quest.progress + amount);
+    if (wasIncomplete && quest.progress >= quest.target) justCompletedIds.push(quest.id);
     didChange = true;
   });
 
-  if (didChange) renderQuests();
+  if (didChange) renderQuests(justCompletedIds);
   if (didChange) saveGameState();
 }
 
