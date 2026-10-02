@@ -1077,22 +1077,6 @@ img {
   overflow: hidden;
 }
 
-.quest-card.quest-just-completed::after {
-  position: absolute;
-  inset: 0;
-  content: "";
-  pointer-events: none;
-  background: linear-gradient(110deg, transparent 30%, rgba(255, 250, 190, 0.7) 48%, transparent 66%);
-  transform: translateX(-100%);
-  animation: quest-card-shimmer 400ms ease-out;
-}
-
-@keyframes quest-card-shimmer {
-  to {
-    transform: translateX(100%);
-  }
-}
-
 .quest-card.quest-claim-shimmer::after {
   position: absolute;
   inset: 0;
@@ -1202,34 +1186,6 @@ img {
   color: #ffffff;
 }
 
-.quest-card.quest-just-completed .quest-check-btn::after {
-  position: absolute;
-  top: -8px;
-  right: -5px;
-  content: "✦";
-  color: #fff6a5;
-  font-size: 18px;
-  line-height: 1;
-  pointer-events: none;
-  text-shadow: 0 1px 2px rgba(74, 47, 20, 0.55);
-  animation: quest-sparkle 650ms ease-out both;
-}
-
-@keyframes quest-sparkle {
-  0% {
-    opacity: 0;
-    transform: scale(0.3) translate(-5px, 7px);
-  }
-  35% {
-    opacity: 1;
-    transform: scale(1.2) translate(0, 0);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0.7) translate(5px, -9px);
-  }
-}
-
 .quest-check-btn.completed:hover {
   border-color: #4caf50;
   background-color: #57a85b;
@@ -1244,9 +1200,7 @@ img {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .quest-card.quest-just-completed::after,
-  .quest-card.quest-claim-shimmer::after,
-  .quest-card.quest-just-completed .quest-check-btn::after {
+  .quest-card.quest-claim-shimmer::after {
     animation: none;
     opacity: 0;
   }

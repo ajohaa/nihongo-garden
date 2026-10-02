@@ -1590,14 +1590,14 @@ function generateQuest(excludeTypes = []) {
 
 // --- quest rendering ---
 
-function renderQuestCard(quest, justCompleted = false) {
+function renderQuestCard(quest) {
   const card = document.createElement("div");
-  updateQuestCard(card, quest, justCompleted);
+  updateQuestCard(card, quest);
   return card;
 }
 
-function updateQuestCard(card, quest, justCompleted = false) {
-  card.className = `quest-card${justCompleted ? " quest-just-completed" : ""}`;
+function updateQuestCard(card, quest) {
+  card.className = "quest-card";
   card.dataset.questId = quest.id;
 
   const isComplete = quest.progress >= quest.target;
@@ -1622,7 +1622,7 @@ function updateQuestCard(card, quest, justCompleted = false) {
   card.querySelector(".quest-check-btn").addEventListener("click", () => claimQuest(quest.id));
 }
 
-function renderQuests(justCompletedIds = []) {
+function renderQuests() {
   questsContainer.innerHTML = "";
 
   const hasAnyQuest = activeQuests.some(Boolean);
@@ -1632,7 +1632,7 @@ function renderQuests(justCompletedIds = []) {
   }
 
   activeQuests.forEach(quest => {
-    if (quest) questsContainer.appendChild(renderQuestCard(quest, justCompletedIds.includes(quest.id)));
+    if (quest) questsContainer.appendChild(renderQuestCard(quest));
   });
 
   // keep the collapsible panel's max-height in sync if it's currently open.
@@ -1716,20 +1716,17 @@ function claimQuest(questId) {
 // optional filter (used so harvest progress only applies to the matching crop).
 function updateQuestProgress(type, matcher, amount = 1) {
   let didChange = false;
-  const justCompletedIds = [];
 
   activeQuests.forEach(quest => {
     if (!quest || quest.type !== type) return;
     if (matcher && !matcher(quest)) return;
     if (quest.progress >= quest.target) return;
 
-    const wasIncomplete = quest.progress < quest.target;
     quest.progress = Math.min(quest.target, quest.progress + amount);
-    if (wasIncomplete && quest.progress >= quest.target) justCompletedIds.push(quest.id);
     didChange = true;
   });
 
-  if (didChange) renderQuests(justCompletedIds);
+  if (didChange) renderQuests();
   if (didChange) saveGameState();
 }
 
