@@ -46,6 +46,7 @@ img {
   position: absolute;
   top: 50%;
   left: 50%;
+  z-index: 500;
   width: min(90vw, 660px);
   transform: translate(-50%, -50%);
   box-sizing: border-box;
@@ -253,8 +254,9 @@ img {
   color: white;
   border: none;
   border-radius: 8px;
+  font-weight: bold;
   cursor: pointer;
-  z-index: 1000; /* Keeps it above the player and plants */
+  z-index: 1000;
 }
 
 #practice-btn:hover {
