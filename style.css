@@ -7,10 +7,11 @@ body {
   align-items: center;
   height: 100vh;
   overflow: hidden;
-  font-family: "jjminiarcade", sans-serif !important;
+  font-family: var(--ui-font-family, "jjminiarcade"), sans-serif !important;
   font-weight: 400;
   font-style: normal;
 }
+
 
 img {
   image-rendering: pixelated;
@@ -478,6 +479,16 @@ img {
   font-weight: bold;
 }
 
+html.font-pixelation-more .kana-character,
+html.font-pixelation-more .kana-glyph,
+html.font-pixelation-more #kana-reference-btn {
+  font-family: "ab-megadot9", sans-serif;
+}
+
+html.font-pixelation-more :is(button, input, select, textarea) {
+  font-family: "cofo-sans-pixel", sans-serif;
+}
+
 .kana-romaji {
   grid-column: 1 / -1;
   color: #607d8b;
@@ -792,7 +803,8 @@ img {
 }
 
 #music-slider,
-#sfx-slider {
+#sfx-slider,
+#font-pixelation-slider {
   width: 100%;
   margin-top: 8px;
   margin-bottom: 20px;
@@ -800,6 +812,15 @@ img {
   border: 2px solid #eee;
   border-radius: 6px;
   box-sizing: border-box;
+}
+
+.font-pixelation-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -16px;
+  margin-bottom: 20px;
+  color: #555;
+  font-size: 12px;
 }
 
 #credits-btn {
