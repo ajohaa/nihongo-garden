@@ -1551,7 +1551,7 @@ function createHarvestQuest(tier) {
     id: makeQuestId(),
     type: "harvest",
     cropId: crop.id,
-    title: `${crop.name} Harvesting`,
+    title: `Harvesting`,
     description: `Harvest ${target} ${crop.name}`,
     progress: 0,
     target,
