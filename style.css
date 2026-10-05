@@ -356,7 +356,8 @@ img {
 .casual-menu-heading h2 {
   margin: 0;
   color: #653a2b;
-  font-size: 28px;
+  font-size: 30px;
+  font-weight: bold;
 }
 
 .practice-menu-grid {

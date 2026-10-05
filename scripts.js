@@ -328,9 +328,9 @@ function updateMovement() {
 
         shouldFlip = facingAngle === 225 || facingAngle === 270 || facingAngle === 315;
 
-        animationTimer++;
+        animationTimer += movementScale;
         if (animationTimer >= ANIMATION_SPEED) {
-            animationTimer = 0;
+            animationTimer -= ANIMATION_SPEED;
             animationFrame = (animationFrame + 1) % playerAnimations[lookupAngle].length;
         }
 
@@ -419,7 +419,7 @@ const kanaBank = [
     { romaji: "hi", hiragana: "ひ", katakana: "ヒ" },
     { romaji: "fu", hiragana: "ふ", katakana: "フ" },
     { romaji: "he", hiragana: "へ", katakana: "ヘ" },
-    { romaji: "ho", hiragana: "ほ", katakana: "ホ" },   
+    { romaji: "ho", hiragana: "ほ", katakana: "ホ" },
     { romaji: "ma", hiragana: "ま", katakana: "マ" },
     { romaji: "mi", hiragana: "み", katakana: "ミ" },
     { romaji: "mu", hiragana: "む", katakana: "ム" },
@@ -806,13 +806,13 @@ function checkKanaAnswer(selectedButton, chosenText) {
     feedbackText.textContent = "✨ Great job! Your answer is correct.";
     feedbackText.className = "correct-msg";
     selectedButton.style.borderColor = "#2e7d32";
-    selectedButton.style.backgroundColor = "#e8f5e9";
+    selectedButton.style.backgroundColor = "#61b168";
   } else {
     playSfx("incorrect");
     feedbackText.textContent = `❌ Not quite! The correct answer was "${currentQuestion.correct}".`;
     feedbackText.className = "wrong-msg";
     selectedButton.style.borderColor = "#c62828";
-    selectedButton.style.backgroundColor = "#ffebee";
+    selectedButton.style.backgroundColor = "#f17b8d";
   }
 
   // if in timed mode, skip the manual "next question" click
@@ -828,7 +828,7 @@ function checkKanaAnswer(selectedButton, chosenText) {
     nextBtn.textContent = "Next Question 👉";
     nextBtn.style.marginTop = "20px";
     nextBtn.style.padding = "10px 20px";
-    nextBtn.className = "choice-btn"; 
+    nextBtn.className = "choice-btn";
     nextBtn.addEventListener("click", nextQuestionSession);
     choicesContainer.appendChild(nextBtn);
   }
